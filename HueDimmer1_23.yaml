@@ -1,4 +1,4 @@
-# Blueprint version 1.22
+# Blueprint version 1.23
 blueprint:
   domain: automation
   name: Hue v2 Dimmer for Lights
@@ -77,7 +77,7 @@ blueprint:
                     - condition: template
                       value_template: "{{ command_type == 'hold' }}"
                   sequence: []
-          
+
         # Brightness Up Button
         - conditions:
             - condition: template
