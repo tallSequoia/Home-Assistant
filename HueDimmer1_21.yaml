@@ -1,4 +1,4 @@
-# Blueprint version 1.19
+# Blueprint version 1.21
 blueprint:
   name: Hue v2 Dimmer for Lights
   description: "Philips Hue v2 Smart Dimmer Switch using Zigbee Home Automation"
@@ -20,10 +20,6 @@ blueprint:
           entity:
             domain: light
 
-  variables:
-    device_id: !input "zha_device"
-    light_group: !input "light_group"
-
 trigger:
   - platform: event
     event_type: zha_event
@@ -34,6 +30,8 @@ condition:
 
 action:
   - variables:
+      device_id: "{{ (input.zha_device) }}"
+      light_group: "{{ (input.light_group) }}"
       button: "{{ trigger.event.data.args.button }}"
       command_type: "{{ trigger.event.data.command }}"
 
@@ -157,7 +155,7 @@ action:
                   - service: light.turn_on
                     data:
                       entity_id: "{{ light_group }}"
-                      brightness_pct: 1
+                      brightness_pct: 3  # Ensure minimum brightness is 3%
 
               # Down Triple Press
               - conditions:
@@ -204,7 +202,7 @@ action:
                   - service: light.turn_on
                     data:
                       entity_id: "{{ light_group }}"
-                      brightness: 1
+                      brightness: 3  # Ensure minimum brightness is 3%
                       color_temp: 5000
                       transition: 1
                   - service: light.turn_off
@@ -219,7 +217,7 @@ action:
                   - service: light.turn_on
                     data:
                       entity_id: "{{ light_group }}"
-                      brightness: 1
+                      brightness: 3  # Minimum brightness
 
               # Bottom Triple Press
               - conditions:
