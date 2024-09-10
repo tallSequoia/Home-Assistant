@@ -1,4 +1,4 @@
-# Blueprint version 1.12
+# Blueprint version 1.13
 blueprint:
   domain: automation
   name: Philips Hue v2 Smart Dimmer Switch
@@ -40,10 +40,14 @@ blueprint:
         command_type: "{{ trigger.event.data.command }}"
     - choose:
         # Top Button (Power on/off Button)
-        - conditions: '{{ button == "top" }}'
+        - conditions:
+            - condition: template
+              value_template: "{{ button == 'top' }}"
           sequence:
             - choose:
-                - conditions: '{{ top_press_override }}'
+                - conditions:
+                    - condition: template
+                      value_template: "{{ top_press_override }}"
                   sequence: !input "top_press_override"
                 default:
                   - service: light.turn_on
@@ -53,21 +57,27 @@ blueprint:
                       color_temp: 5000
                       transition: 1
         # Brightness Up Button
-        - conditions: '{{ button == "up" }}'
+        - conditions:
+            - condition: template
+              value_template: "{{ button == 'up' }}"
           sequence:
             - service: light.turn_on
               data:
                 target: "{{ light_group }}"
                 brightness_step: 10
         # Brightness Down Button
-        - conditions: '{{ button == "down" }}'
+        - conditions:
+            - condition: template
+              value_template: "{{ button == 'down' }}"
           sequence:
             - service: light.turn_on
               data:
                 target: "{{ light_group }}"
                 brightness_step: -10
         # Bottom Button (Power Off Button)
-        - conditions: '{{ button == "bottom" }}'
+        - conditions:
+            - condition: template
+              value_template: "{{ button == 'bottom' }}"
           sequence:
             - service: light.turn_on
               data:
@@ -80,56 +90,72 @@ blueprint:
                 target: "{{ light_group }}"
     - choose:
         # Up Button Double Press
-        - conditions: '{{ command_type == "up_double_press" }}'
+        - conditions:
+            - condition: template
+              value_template: "{{ command_type == 'up_double_press' }}"
           sequence:
             - service: light.turn_on
               data:
                 target: "{{ light_group }}"
                 brightness: 255
         # Up Button Triple Press
-        - conditions: '{{ command_type == "up_triple_press" }}'
+        - conditions:
+            - condition: template
+              value_template: "{{ command_type == 'up_triple_press' }}"
           sequence:
             - service: light.turn_on
               data:
                 target: "{{ light_group }}"
                 brightness: 1
         # Down Button Double Press
-        - conditions: '{{ command_type == "down_double_press" }}'
+        - conditions:
+            - condition: template
+              value_template: "{{ command_type == 'down_double_press' }}"
           sequence:
             - service: light.turn_on
               data:
                 target: "{{ light_group }}"
                 brightness: 1
         # Down Button Triple Press
-        - conditions: '{{ command_type == "down_triple_press" }}'
+        - conditions:
+            - condition: template
+              value_template: "{{ command_type == 'down_triple_press' }}"
           sequence:
             - service: light.turn_on
               data:
                 target: "{{ light_group }}"
                 brightness: 255
         # Top Button Double Press
-        - conditions: '{{ command_type == "top_double_press" }}'
+        - conditions:
+            - condition: template
+              value_template: "{{ command_type == 'top_double_press' }}"
           sequence:
             - service: light.turn_on
               data:
                 target: "{{ light_group }}"
                 brightness: 255
         # Top Button Triple Press
-        - conditions: '{{ command_type == "top_triple_press" }}'
+        - conditions:
+            - condition: template
+              value_template: "{{ command_type == 'top_triple_press' }}"
           sequence:
             - service: light.turn_on
               data:
                 target: "{{ light_group }}"
                 brightness: 1
         # Bottom Button Double Press
-        - conditions: '{{ command_type == "bottom_double_press" }}'
+        - conditions:
+            - condition: template
+              value_template: "{{ command_type == 'bottom_double_press' }}"
           sequence:
             - service: light.turn_on
               data:
                 target: "{{ light_group }}"
                 brightness: 1
         # Bottom Button Triple Press
-        - conditions: '{{ command_type == "bottom_triple_press" }}'
+        - conditions:
+            - condition: template
+              value_template: "{{ command_type == 'bottom_triple_press' }}"
           sequence:
             - service: light.turn_on
               data:
@@ -137,7 +163,9 @@ blueprint:
                 brightness: 255
     - choose:
         # Up Button Hold
-        - conditions: '{{ command_type == "up_hold" }}'
+        - conditions:
+            - condition: template
+              value_template: "{{ command_type == 'up_hold' }}"
           sequence:
             - repeat:
                 while:
@@ -150,7 +178,9 @@ blueprint:
                       target: "{{ light_group }}"
                       brightness_step: 20
         # Down Button Hold
-        - conditions: '{{ command_type == "down_hold" }}'
+        - conditions:
+            - condition: template
+              value_template: "{{ command_type == 'down_hold' }}"
           sequence:
             - repeat:
                 while:
@@ -163,8 +193,12 @@ blueprint:
                       target: "{{ light_group }}"
                       brightness_step: -20
         # Top Button Hold
-        - conditions: '{{ command_type == "top_hold" }}'
+        - conditions:
+            - condition: template
+              value_template: "{{ command_type == 'top_hold' }}"
           sequence: []
         # Bottom Button Hold
-        - conditions: '{{ command_type == "bottom_hold" }}'
+        - conditions:
+            - condition: template
+              value_template: "{{ command_type == 'bottom_hold' }}"
           sequence: []
