@@ -1,4 +1,4 @@
-# Blueprint version 1.13
+# Blueprint version 1.14
 blueprint:
   domain: automation
   name: Philips Hue v2 Smart Dimmer Switch
