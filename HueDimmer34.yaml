@@ -17,8 +17,7 @@ blueprint:
       description: The light or light group to control
       selector:
         target:
-          entity:
-            domain: light
+          entity: {}
 
 mode: restart
 max_exceeded: silent
@@ -39,19 +38,6 @@ action:
       command_type: "{{ trigger.event.data.command }}"
       light_group: !input "light_group"
 
-      # Extract entity IDs from the light group
-      light_entity_ids: >
-        {% if light_group is defined %}
-          {% if light_group.entity_id is defined %}
-            {{ [light_group.entity_id] }}
-          {% else %}
-            {{ state_attr(light_group, 'entity_id') }}
-          {% endif %}
-        {% else %}
-          []
-        {% endif %}
-
-
   - choose:
 
       ######################################################################
@@ -69,7 +55,7 @@ action:
                 sequence:
                   - service: light.turn_on
                     data:
-                      entity_id: "{{ light_entity_ids }}"
+                      entity_id: "{{ light_group }}"
                       brightness: 255
                       color_temp: 5000
                       transition: 1
@@ -81,7 +67,7 @@ action:
                 sequence:
                   - service: light.turn_on
                     data:
-                      entity_id: "{{ light_entity_ids }}"
+                      entity_id: "{{ light_group }}"
                       brightness: 255
 
               # Top Triple Press
@@ -111,7 +97,7 @@ action:
                 sequence:
                   - service: light.turn_on
                     data:
-                      entity_id: "{{ light_entity_ids }}"
+                      entity_id: "{{ light_group }}"
                       brightness_step: 10
 
               # Up Double Press
@@ -121,7 +107,7 @@ action:
                 sequence:
                   - service: light.turn_on
                     data:
-                      entity_id: "{{ light_entity_ids }}"
+                      entity_id: "{{ light_group }}"
                       brightness: 255
 
               # Up Triple Press
@@ -138,12 +124,12 @@ action:
                   - repeat:
                       while:
                         - condition: state
-                          entity_id: "{{ light_entity_ids }}"
+                          entity_id: "{{ light_group }}"
                           state: "on"
                       sequence:
                         - service: light.turn_on
                           data:
-                            entity_id: "{{ light_entity_ids }}"
+                            entity_id: "{{ light_group }}"
                             brightness_step: 20
 
       ######################################################################
@@ -161,7 +147,7 @@ action:
                 sequence:
                   - service: light.turn_on
                     data:
-                      entity_id: "{{ light_entity_ids }}"
+                      entity_id: "{{ light_group }}"
                       brightness_step: -10
 
               # Down Double Press
@@ -171,7 +157,7 @@ action:
                 sequence:
                   - service: light.turn_on
                     data:
-                      entity_id: "{{ light_entity_ids }}"
+                      entity_id: "{{ light_group }}"
                       brightness_pct: 3  # Ensure minimum brightness is 3%
 
               # Down Triple Press
@@ -181,7 +167,7 @@ action:
                 sequence:
                   - service: light.turn_on
                     data:
-                      entity_id: "{{ light_entity_ids }}"
+                      entity_id: "{{ light_group }}"
                       brightness: 255
 
               # Down Hold
@@ -192,12 +178,12 @@ action:
                   - repeat:
                       while:
                         - condition: state
-                          entity_id: "{{ light_entity_ids }}"
+                          entity_id: "{{ light_group }}"
                           state: "on"
                       sequence:
                         - service: light.turn_on
                           data:
-                            entity_id: "{{ light_entity_ids }}"
+                            entity_id: "{{ light_group }}"
                             brightness: >
                               {% set current_brightness = state_attr(light_group, 'brightness') %}
                               {% set new_brightness = current_brightness - 20 %}
@@ -222,13 +208,13 @@ action:
                 sequence:
                   - service: light.turn_on
                     data:
-                      entity_id: "{{ light_entity_ids }}"
+                      entity_id: "{{ light_group }}"
                       brightness: 3  # Ensure minimum brightness is 3%
                       color_temp: 5000
                       transition: 1
                   - service: light.turn_off
                     data:
-                      entity_id: "{{ light_entity_ids }}"
+                      entity_id: "{{ light_group }}"
 
               # Bottom Double Press
               - conditions:
@@ -237,7 +223,7 @@ action:
                 sequence:
                   - service: light.turn_on
                     data:
-                      entity_id: "{{ light_entity_ids }}"
+                      entity_id: "{{ light_group }}"
                       brightness: 3  # Minimum brightness
 
               # Bottom Triple Press
@@ -247,7 +233,7 @@ action:
                 sequence:
                   - service: light.turn_on
                     data:
-                      entity_id: "{{ light_entity_ids }}"
+                      entity_id: "{{ light_group }}"
                       brightness: 255
 
               # Bottom Hold
