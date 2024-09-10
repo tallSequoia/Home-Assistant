@@ -1,4 +1,4 @@
-# Blueprint version 35
+# Blueprint version 36
 blueprint:
   name: Hue v2 Dimmer for Lights
   description: "Philips Hue v2 Smart Dimmer Switch using Zigbee Home Automation"
@@ -64,11 +64,7 @@ action:
               - conditions:
                   - condition: template
                     value_template: "{{ command_type == 'top_double_press' }}"
-                sequence:
-                  - service: light.turn_on
-                    data:
-                      entity_id: "{{ light_group }}"
-                      brightness: 255
+                sequence: []
 
               # Top Triple Press
               - conditions:
@@ -94,43 +90,26 @@ action:
               - conditions:
                   - condition: template
                     value_template: "{{ command_type == 'press' }}"
-                sequence:
-                  - service: light.turn_on
-                    data:
-                      entity_id: "{{ light_group }}"
-                      brightness_step: 10
+                sequence: []
 
               # Up Double Press
               - conditions:
                   - condition: template
                     value_template: "{{ command_type == 'up_double_press' }}"
-                sequence:
-                  - service: light.turn_on
-                    data:
-                      entity_id: "{{ light_group }}"
-                      brightness: 255
+                sequence: []
 
               # Up Triple Press
               - conditions:
                   - condition: template
                     value_template: "{{ command_type == 'up_triple_press' }}"
-                sequence: []  # Allow for future customization
+                sequence: []
 
               # Up Hold
               - conditions:
                   - condition: template
                     value_template: "{{ command_type == 'up_hold' }}"
-                sequence:
-                  - repeat:
-                      while:
-                        - condition: state
-                          entity_id: "{{ light_group }}"
-                          state: "on"
-                      sequence:
-                        - service: light.turn_on
-                          data:
-                            entity_id: "{{ light_group }}"
-                            brightness_step: 20
+                sequence: []
+
 
       ######################################################################
       ## Down Button Logic
@@ -144,54 +123,26 @@ action:
               - conditions:
                   - condition: template
                     value_template: "{{ command_type == 'press' }}"
-                sequence:
-                  - service: light.turn_on
-                    data:
-                      entity_id: "{{ light_group }}"
-                      brightness_step: -10
+                sequence: []
 
               # Down Double Press
               - conditions:
                   - condition: template
                     value_template: "{{ command_type == 'down_double_press' }}"
-                sequence:
-                  - service: light.turn_on
-                    data:
-                      entity_id: "{{ light_group }}"
-                      brightness_pct: 3  # Ensure minimum brightness is 3%
+                sequence: []
 
               # Down Triple Press
               - conditions:
                   - condition: template
                     value_template: "{{ command_type == 'down_triple_press' }}"
-                sequence:
-                  - service: light.turn_on
-                    data:
-                      entity_id: "{{ light_group }}"
-                      brightness: 255
+                sequence: []
 
               # Down Hold
               - conditions:
                   - condition: template
                     value_template: "{{ command_type == 'down_hold' }}"
-                sequence:
-                  - repeat:
-                      while:
-                        - condition: state
-                          entity_id: "{{ light_group }}"
-                          state: "on"
-                      sequence:
-                        - service: light.turn_on
-                          data:
-                            entity_id: "{{ light_group }}"
-                            brightness: >
-                              {% set current_brightness = state_attr(light_group, 'brightness') %}
-                              {% set new_brightness = current_brightness - 20 %}
-                              {% if new_brightness < 3 %}
-                                3
-                              {% else %}
-                                {{ new_brightness }}
-                              {% endif %}
+                sequence: []
+
 
       ######################################################################
       ## Bottom Button Logic
@@ -205,36 +156,19 @@ action:
               - conditions:
                   - condition: template
                     value_template: "{{ command_type == 'press' }}"
-                sequence:
-                  - service: light.turn_on
-                    data:
-                      entity_id: "{{ light_group }}"
-                      brightness: 3  # Ensure minimum brightness is 3%
-                      color_temp: 5000
-                      transition: 1
-                  - service: light.turn_off
-                    data:
-                      entity_id: "{{ light_group }}"
+                sequence: []
 
               # Bottom Double Press
               - conditions:
                   - condition: template
                     value_template: "{{ command_type == 'bottom_double_press' }}"
-                sequence:
-                  - service: light.turn_on
-                    data:
-                      entity_id: "{{ light_group }}"
-                      brightness: 3  # Minimum brightness
+                sequence: []
 
               # Bottom Triple Press
               - conditions:
                   - condition: template
                     value_template: "{{ command_type == 'bottom_triple_press' }}"
-                sequence:
-                  - service: light.turn_on
-                    data:
-                      entity_id: "{{ light_group }}"
-                      brightness: 255
+                sequence: []
 
               # Bottom Hold
               - conditions:
