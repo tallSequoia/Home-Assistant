@@ -1,4 +1,4 @@
-# Blueprint version 1.26
+# Blueprint version 1.27
 blueprint:
   domain: automation
   name: Hue v2 Dimmer for Lights
@@ -32,7 +32,7 @@ blueprint:
     - variables:
         button: "{{ trigger.event.data.args.button }}"
         command_type: "{{ trigger.event.data.command }}"
-
+        
     - choose:
         # Top Button (Power on/off Button)
         - conditions:
@@ -69,6 +69,7 @@ blueprint:
                     - condition: template
                       value_template: "{{ command_type == 'hold' }}"
                   sequence: []
+
 
         # Brightness Up Button
         - conditions:
@@ -118,6 +119,7 @@ blueprint:
                               target: "{{ light_group }}"
                               brightness_step: 30
 
+
         # Brightness Down Button
         - conditions:
             - condition: template
@@ -132,14 +134,14 @@ blueprint:
                     - service: light.turn_on
                       data:
                         target: "{{ light_group }}"
-                        brightness: >
-                          {% set current_brightness = state_attr(light_group, 'brightness') | default(255) %}
-                          {% set new_brightness = current_brightness - 20 %}
-                          {% if new_brightness < 3 %}
-                            3
-                          {% else %}
-                            {{ new_brightness }}
-                          {% endif %}
+                        brightness_step:  >
+                                {% set current_brightness = state_attr(light_group, 'brightness') | default(255) %}
+                                {% set new_brightness = current_brightness - 20 %}
+                                {% if new_brightness < 3 %}
+                                  3
+                                {% else %}
+                                  {{ new_brightness }}
+                                {% endif %}
 
                 # Double Press
                 - conditions:
@@ -180,6 +182,7 @@ blueprint:
                                   {{ new_brightness }}
                                 {% endif %}
 
+
         # Bottom Button (Power Off Button)
         - conditions:
             - condition: template
@@ -200,13 +203,13 @@ blueprint:
                     - service: light.turn_off
                       data:
                         target: "{{ light_group }}"
-
+                        
                 # Double Press
                 - conditions:
                     - condition: template
                       value_template: "{{ command_type == 'double_press' }}"
                   sequence: []
-
+                        
                 # Triple Press
                 - conditions:
                     - condition: template
