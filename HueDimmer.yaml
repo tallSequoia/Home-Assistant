@@ -1,5 +1,4 @@
-# Blueprint Version 1.12
-
+# Blueprint version 1.12
 blueprint:
   domain: automation
   name: Philips Hue v2 Smart Dimmer Switch
@@ -12,15 +11,13 @@ blueprint:
         device:
           integration: zha
           model: RWL022
-          multiple: true
-    lights:
-      name: Lights
-      description: List of lights or light groups to control
+    light_group:
+      name: Light or Light Group
+      description: The light or light group to control
       selector:
         target:
           entity:
             domain: light
-            multiple: true
     top_press_override:
       name: Top Press Override
       description: Script to override the default top press action (default - turn on light at full brightness and 5000K color temperature)
@@ -30,170 +27,144 @@ blueprint:
   mode: single
   max_exceeded: silent
   variables:
-    device_ids: !input "zha_device"
-    lights: !input "lights"
+    device_id: !input "zha_device"
+    light_group: !input "light_group"
     top_press_override: !input "top_press_override"
   trigger:
     - platform: event
       event_type: zha_event
-  condition: "{{ trigger.event.data.device_id in device_ids }}"
+  condition: "{{ trigger.event.data.device_id == device_id }}"
   action:
     - variables:
         button: "{{ trigger.event.data.args.button }}"
         command_type: "{{ trigger.event.data.command }}"
     - choose:
         # Top Button (Power on/off Button)
-        - conditions: "{{ button == 'top' }}"
+        - conditions: '{{ button == "top" }}'
           sequence:
             - choose:
-                - conditions: "{{ top_press_override }}"
+                - conditions: '{{ top_press_override }}'
                   sequence: !input "top_press_override"
                 default:
                   - service: light.turn_on
-                    target:
-                      entity_id: "{{ lights }}"
                     data:
+                      target: "{{ light_group }}"
                       brightness: 255
                       color_temp: 5000
                       transition: 1
         # Brightness Up Button
-        - conditions: "{{ button == 'up' }}"
+        - conditions: '{{ button == "up" }}'
           sequence:
-            - choose:
-                - conditions: "{{ brightness_up_override }}"
-                  sequence: !input "brightness_up_override"
-                default:
-                  - service: light.turn_on
-                    target:
-                      entity_id: "{{ lights }}"
-                    data:
-                      brightness_step: 10
+            - service: light.turn_on
+              data:
+                target: "{{ light_group }}"
+                brightness_step: 10
         # Brightness Down Button
-        - conditions: "{{ button == 'down' }}"
+        - conditions: '{{ button == "down" }}'
           sequence:
-            - choose:
-                - conditions: "{{ brightness_down_override }}"
-                  sequence: !input "brightness_down_override"
-                default:
-                  - service: light.turn_on
-                    target:
-                      entity_id: "{{ lights }}"
-                    data:
-                      brightness_step: -10
+            - service: light.turn_on
+              data:
+                target: "{{ light_group }}"
+                brightness_step: -10
         # Bottom Button (Power Off Button)
-        - conditions: "{{ button == 'bottom' }}"
+        - conditions: '{{ button == "bottom" }}'
           sequence:
-            - choose:
-                - conditions: "{{ bottom_press_override }}"
-                  sequence: !input "bottom_press_override"
-                default:
-                  - service: light.turn_on
-                    target:
-                      entity_id: "{{ lights }}"
-                    data:
-                      brightness: 1
-                      color_temp: 5000
-                      transition: 1
-                  - service: light.turn_off
-                    target:
-                      entity_id: "{{ lights }}"
+            - service: light.turn_on
+              data:
+                target: "{{ light_group }}"
+                brightness: 1
+                color_temp: 5000
+                transition: 1
+            - service: light.turn_off
+              data:
+                target: "{{ light_group }}"
     - choose:
         # Up Button Double Press
-        - conditions: "{{ command_type == 'up_double_press' }}"
+        - conditions: '{{ command_type == "up_double_press" }}'
           sequence:
             - service: light.turn_on
-              target:
-                entity_id: "{{ lights }}"
               data:
+                target: "{{ light_group }}"
                 brightness: 255
         # Up Button Triple Press
-        - conditions: "{{ command_type == 'up_triple_press' }}"
+        - conditions: '{{ command_type == "up_triple_press" }}'
           sequence:
             - service: light.turn_on
-              target:
-                entity_id: "{{ lights }}"
               data:
+                target: "{{ light_group }}"
                 brightness: 1
         # Down Button Double Press
-        - conditions: "{{ command_type == 'down_double_press' }}"
+        - conditions: '{{ command_type == "down_double_press" }}'
           sequence:
             - service: light.turn_on
-              target:
-                entity_id: "{{ lights }}"
               data:
+                target: "{{ light_group }}"
                 brightness: 1
         # Down Button Triple Press
-        - conditions: "{{ command_type == 'down_triple_press' }}"
+        - conditions: '{{ command_type == "down_triple_press" }}'
           sequence:
             - service: light.turn_on
-              target:
-                entity_id: "{{ lights }}"
               data:
+                target: "{{ light_group }}"
                 brightness: 255
         # Top Button Double Press
-        - conditions: "{{ command_type == 'top_double_press' }}"
+        - conditions: '{{ command_type == "top_double_press" }}'
           sequence:
             - service: light.turn_on
-              target:
-                entity_id: "{{ lights }}"
               data:
+                target: "{{ light_group }}"
                 brightness: 255
         # Top Button Triple Press
-        - conditions: "{{ command_type == 'top_triple_press' }}"
+        - conditions: '{{ command_type == "top_triple_press" }}'
           sequence:
             - service: light.turn_on
-              target:
-                entity_id: "{{ lights }}"
               data:
+                target: "{{ light_group }}"
                 brightness: 1
         # Bottom Button Double Press
-        - conditions: "{{ command_type == 'bottom_double_press' }}"
+        - conditions: '{{ command_type == "bottom_double_press" }}'
           sequence:
             - service: light.turn_on
-              target:
-                entity_id: "{{ lights }}"
               data:
+                target: "{{ light_group }}"
                 brightness: 1
         # Bottom Button Triple Press
-        - conditions: "{{ command_type == 'bottom_triple_press' }}"
+        - conditions: '{{ command_type == "bottom_triple_press" }}'
           sequence:
             - service: light.turn_on
-              target:
-                entity_id: "{{ lights }}"
               data:
+                target: "{{ light_group }}"
                 brightness: 255
     - choose:
         # Up Button Hold
-        - conditions: "{{ command_type == 'up_hold' }}"
+        - conditions: '{{ command_type == "up_hold" }}'
           sequence:
             - repeat:
                 while:
                   - condition: state
-                    entity_id: "{{ lights }}"
+                    entity_id: "{{ light_group }}"
                     state: "on"
                 sequence:
                   - service: light.turn_on
-                    target:
-                      entity_id: "{{ lights }}"
                     data:
+                      target: "{{ light_group }}"
                       brightness_step: 20
         # Down Button Hold
-        - conditions: "{{ command_type == 'down_hold' }}"
+        - conditions: '{{ command_type == "down_hold" }}'
           sequence:
             - repeat:
                 while:
                   - condition: state
-                    entity_id: "{{ lights }}"
+                    entity_id: "{{ light_group }}"
                     state: "on"
                 sequence:
                   - service: light.turn_on
-                    target:
-                      entity_id: "{{ lights }}"
                     data:
+                      target: "{{ light_group }}"
                       brightness_step: -20
         # Top Button Hold
-        - conditions: "{{ command_type == 'top_hold' }}"
+        - conditions: '{{ command_type == "top_hold" }}'
           sequence: []
         # Bottom Button Hold
-        - conditions: "{{ command_type == 'bottom_hold' }}"
+        - conditions: '{{ command_type == "bottom_hold" }}'
           sequence: []
