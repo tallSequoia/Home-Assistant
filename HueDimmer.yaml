@@ -7,13 +7,11 @@ blueprint:
       name: Philips Hue v1/v2 Smart Dimmer Switch and Remote
       description: Select one or more Philips Hue v1 (RWL021) or v2 (RWL022) Smart Dimmer Switch and Remote devices
       selector:
-        target:
-          entity:
-            integration: zha
-            device:
-              model:
-                - RWL021
-                - RWL022
+        device:
+          integration: zha
+          model:
+            - RWL021
+            - RWL022
     light_entity:
       name: Light
       description: The light entity to control
