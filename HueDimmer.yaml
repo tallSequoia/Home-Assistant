@@ -1,10 +1,11 @@
+# Version 1.11
 blueprint:
   domain: automation
   name: Philips Hue v2 Smart Dimmer Switch
   description: "Philips Hue v2 Smart Dimmer Switch using Zigbee Home Automation"
   input:
-    zha_device:
-      name: ZHA Device
+    zha_devices:
+      name: ZHA Devices
       description: List of available Philips Hue v2 Smart Dimmer Switch devices
       selector:
         device:
@@ -13,44 +14,58 @@ blueprint:
           multiple: true
     lights:
       name: Lights
-      description: List of lights or light groups to control
+      description: List of lights or light groups to be controlled
       selector:
         target:
-          entity:
-            domain: light
-            multiple: true
+          entity: light
+          multiple: true
     top_press_override:
       name: Top Press Override
-      description: Script to override the default top press action (default - turn on light at full brightness and 5000K color temperature)
+      description: Script to override the default top press action (default - turn on lights at full brightness and 5000K color temperature)
+      default: []
+      selector:
+        action: null
+    brightness_up_override:
+      name: Brightness Up Override
+      description: Script to override the default brightness up action (default - increase brightness by 10%)
+      default: []
+      selector:
+        action: null
+    brightness_down_override:
+      name: Brightness Down Override
+      description: Script to override the default brightness down action (default - decrease brightness by 10%)
+      default: []
+      selector:
+        action: null
+    bottom_press_override:
+      name: Bottom Press Override
+      description: Script to override the default bottom press action (default - set lights to white and minimal brightness before turning off)
       default: []
       selector:
         action: null
   mode: single
   max_exceeded: silent
   variables:
-    device_id: !input "zha_device"
+    zha_devices: !input "zha_devices"
     lights: !input "lights"
     top_press_override: !input "top_press_override"
+    brightness_up_override: !input "brightness_up_override"
+    brightness_down_override: !input "brightness_down_override"
+    bottom_press_override: !input "bottom_press_override"
   trigger:
     - platform: event
       event_type: zha_event
-  condition:
-    - condition: template
-      value_template: "{{ trigger.event.data.device_id in device_id }}"
+  condition: "{{ trigger.event.data.device_id in zha_devices }}"
   action:
     - variables:
         button: "{{ trigger.event.data.args.button }}"
         command_type: "{{ trigger.event.data.command }}"
     - choose:
         # Top Button (Power on/off Button)
-        - conditions:
-            - condition: template
-              value_template: "{{ button == 'top' }}"
+        - conditions: "{{ button == 'top' }}"
           sequence:
             - choose:
-                - conditions:
-                    - condition: template
-                      value_template: "{{ top_press_override }}"
+                - conditions: "{{ top_press_override }}"
                   sequence: !input "top_press_override"
                 default:
                   - service: light.turn_on
@@ -60,14 +75,10 @@ blueprint:
                       color_temp: 5000
                       transition: 1
         # Brightness Up Button
-        - conditions:
-            - condition: template
-              value_template: "{{ button == 'up' }}"
+        - conditions: "{{ button == 'up' }}"
           sequence:
             - choose:
-                - conditions:
-                    - condition: template
-                      value_template: "{{ brightness_up_override }}"
+                - conditions: "{{ brightness_up_override }}"
                   sequence: !input "brightness_up_override"
                 default:
                   - service: light.turn_on
@@ -75,37 +86,22 @@ blueprint:
                       entity_id: "{{ lights }}"
                       brightness_step: 10
         # Brightness Down Button
-        - conditions:
-            - condition: template
-              value_template: "{{ button == 'down' }}"
+        - conditions: "{{ button == 'down' }}"
           sequence:
             - choose:
-                - conditions:
-                    - condition: template
-                      value_template: "{{ brightness_down_override }}"
+                - conditions: "{{ brightness_down_override }}"
                   sequence: !input "brightness_down_override"
                 default:
                   - service: light.turn_on
                     data:
                       entity_id: "{{ lights }}"
                       brightness_step: -10
-                      brightness: >
-                        {% set current_brightness = state_attr('light.' ~ trigger.event.data.args.device_id, 'brightness') | int %}
-                        {% set new_brightness = current_brightness + (-10) %}
-                        {% if new_brightness < 1 %}
-                          1
-                        {% else %}
-                          {{ new_brightness }}
-                        {% endif %}
+                      brightness: "{{ state_attr('light.your_light', 'brightness') | int(255) | max(1) }}"
         # Bottom Button (Power Off Button)
-        - conditions:
-            - condition: template
-              value_template: "{{ button == 'bottom' }}"
+        - conditions: "{{ button == 'bottom' }}"
           sequence:
             - choose:
-                - conditions:
-                    - condition: template
-                      value_template: "{{ bottom_press_override }}"
+                - conditions: "{{ bottom_press_override }}"
                   sequence: !input "bottom_press_override"
                 default:
                   - service: light.turn_on
@@ -119,72 +115,56 @@ blueprint:
                       entity_id: "{{ lights }}"
     - choose:
         # Up Button Double Press
-        - conditions:
-            - condition: template
-              value_template: "{{ command_type == 'up_double_press' }}"
+        - conditions: "{{ command_type == 'up_double_press' }}"
           sequence:
             - service: light.turn_on
               data:
                 entity_id: "{{ lights }}"
                 brightness: 255
         # Up Button Triple Press
-        - conditions:
-            - condition: template
-              value_template: "{{ command_type == 'up_triple_press' }}"
+        - conditions: "{{ command_type == 'up_triple_press' }}"
           sequence:
             - service: light.turn_on
               data:
                 entity_id: "{{ lights }}"
                 brightness: 1
         # Down Button Double Press
-        - conditions:
-            - condition: template
-              value_template: "{{ command_type == 'down_double_press' }}"
+        - conditions: "{{ command_type == 'down_double_press' }}"
           sequence:
             - service: light.turn_on
               data:
                 entity_id: "{{ lights }}"
                 brightness: 1
         # Down Button Triple Press
-        - conditions:
-            - condition: template
-              value_template: "{{ command_type == 'down_triple_press' }}"
+        - conditions: "{{ command_type == 'down_triple_press' }}"
           sequence:
             - service: light.turn_on
               data:
                 entity_id: "{{ lights }}"
                 brightness: 255
         # Top Button Double Press
-        - conditions:
-            - condition: template
-              value_template: "{{ command_type == 'top_double_press' }}"
+        - conditions: "{{ command_type == 'top_double_press' }}"
           sequence:
             - service: light.turn_on
               data:
                 entity_id: "{{ lights }}"
                 brightness: 255
         # Top Button Triple Press
-        - conditions:
-            - condition: template
-              value_template: "{{ command_type == 'top_triple_press' }}"
+        - conditions: "{{ command_type == 'top_triple_press' }}"
           sequence:
             - service: light.turn_on
               data:
                 entity_id: "{{ lights }}"
                 brightness: 1
         # Bottom Button Double Press
-        - conditions:
-            - condition: template
-              value_template: "{{ command_type == 'bottom_double_press' }}"
+        - conditions: "{{ command_type == 'bottom_double_press' }}"
           sequence:
             - service: light.turn_on
               data:
                 entity_id: "{{ lights }}"
                 brightness: 1
         # Bottom Button Triple Press
-        - conditions:
-            - condition: template
-              value_template: "{{ command_type == 'bottom_triple_press' }}"
+        - conditions: "{{ command_type == 'bottom_triple_press' }}"
           sequence:
             - service: light.turn_on
               data:
@@ -192,9 +172,7 @@ blueprint:
                 brightness: 255
     - choose:
         # Up Button Hold
-        - conditions:
-            - condition: template
-              value_template: "{{ command_type == 'up_hold' }}"
+        - conditions: "{{ command_type == 'up_hold' }}"
           sequence:
             - repeat:
                 while:
@@ -207,9 +185,7 @@ blueprint:
                       entity_id: "{{ lights }}"
                       brightness_step: 20
         # Down Button Hold
-        - conditions:
-            - condition: template
-              value_template: "{{ command_type == 'down_hold' }}"
+        - conditions: "{{ command_type == 'down_hold' }}"
           sequence:
             - repeat:
                 while:
@@ -222,12 +198,8 @@ blueprint:
                       entity_id: "{{ lights }}"
                       brightness_step: -20
         # Top Button Hold
-        - conditions:
-            - condition: template
-              value_template: "{{ command_type == 'top_hold' }}"
+        - conditions: "{{ command_type == 'top_hold' }}"
           sequence: []
         # Bottom Button Hold
-        - conditions:
-            - condition: template
-              value_template: "{{ command_type == 'bottom_hold' }}"
+        - conditions: "{{ command_type == 'bottom_hold' }}"
           sequence: []
