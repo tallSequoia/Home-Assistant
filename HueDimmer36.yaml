@@ -1,4 +1,4 @@
-# Blueprint version 36
+# Blueprint version 34
 blueprint:
   name: Hue v2 Dimmer for Lights
   description: "Philips Hue v2 Smart Dimmer Switch using Zigbee Home Automation"
@@ -25,18 +25,21 @@ blueprint:
     top_double_press:
       name: Top Button Double Press Action
       description: Action for double press of top button
+      default: []
       selector:
         action: {}
 
     top_triple_press:
       name: Top Button Triple Press Action
       description: Action for triple press of top button
+      default: []
       selector:
         action: {}
 
     top_hold:
       name: Top Button Hold Action
       description: Action for hold of top button
+      default: []
       selector:
         action: {}
 
@@ -89,19 +92,29 @@ action:
               - conditions:
                   - condition: template
                     value_template: "{{ command_type == 'top_double_press' }}"
-                sequence: !input "top_double_press"
-
+                sequence:
+                  - choose:
+                      - conditions: "{{ input.top_double_press != [] }}"
+                        sequence: !input "top_double_press"
+                        
               # Top Triple Press
               - conditions:
                   - condition: template
                     value_template: "{{ command_type == 'top_triple_press' }}"
-                sequence: !input "top_triple_press"
+                sequence:
+                  - choose:
+                      - conditions: "{{ input.top_triple_press != [] }}"
+                        sequence: !input "top_triple_press"
 
               # Top Hold
               - conditions:
                   - condition: template
                     value_template: "{{ command_type == 'top_hold' }}"
-                sequence: !input "top_hold"
+                sequence:
+                  - choose:
+                      - conditions: "{{ input.top_hold != [] }}"
+                        sequence: !input "top_hold"
+
 
       ######################################################################
       ## Up Button Logic
