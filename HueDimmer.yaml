@@ -17,32 +17,11 @@ blueprint:
       default: []
       selector:
         action: null
-    brightness_up_override:
-      name: Brightness Up Override
-      description: Script to override the default brightness up action (default - increase brightness by 10%)
-      default: []
-      selector:
-        action: null
-    brightness_down_override:
-      name: Brightness Down Override
-      description: Script to override the default brightness down action (default - decrease brightness by 10%)
-      default: []
-      selector:
-        action: null
-    bottom_press_override:
-      name: Bottom Press Override
-      description: Script to override the default bottom press action (default - set light to white and minimal brightness before turning off)
-      default: []
-      selector:
-        action: null
   mode: single
   max_exceeded: silent
   variables:
     device_id: !input "zha_device"
     top_press_override: !input "top_press_override"
-    brightness_up_override: !input "brightness_up_override"
-    brightness_down_override: !input "brightness_down_override"
-    bottom_press_override: !input "bottom_press_override"
   trigger:
     - platform: event
       event_type: zha_event
@@ -95,6 +74,7 @@ blueprint:
                     data:
                       entity_id: "{{ device_id }}"
                       brightness_step: -10
+                      brightness: "{{ state_attr(device_id, 'brightness')|default(255) | max(1) }}"
         # Bottom Button (Power Off Button)
         - conditions: '{{ button == "bottom" }}'
           sequence:
@@ -119,13 +99,6 @@ blueprint:
               data:
                 entity_id: "{{ device_id }}"
                 brightness: 255
-        # Up Button Triple Press
-        - conditions: '{{ command_type == "up_triple_press" }}'
-          sequence:
-            - service: light.turn_on
-              data:
-                entity_id: "{{ device_id }}"
-                brightness: 1
         # Down Button Double Press
         - conditions: '{{ command_type == "down_double_press" }}'
           sequence:
@@ -133,13 +106,6 @@ blueprint:
               data:
                 entity_id: "{{ device_id }}"
                 brightness: 1
-        # Down Button Triple Press
-        - conditions: '{{ command_type == "down_triple_press" }}'
-          sequence:
-            - service: light.turn_on
-              data:
-                entity_id: "{{ device_id }}"
-                brightness: 255
         # Top Button Double Press
         - conditions: '{{ command_type == "top_double_press" }}'
           sequence:
@@ -147,13 +113,6 @@ blueprint:
               data:
                 entity_id: "{{ device_id }}"
                 brightness: 255
-        # Top Button Triple Press
-        - conditions: '{{ command_type == "top_triple_press" }}'
-          sequence:
-            - service: light.turn_on
-              data:
-                entity_id: "{{ device_id }}"
-                brightness: 1
         # Bottom Button Double Press
         - conditions: '{{ command_type == "bottom_double_press" }}'
           sequence:
@@ -161,13 +120,6 @@ blueprint:
               data:
                 entity_id: "{{ device_id }}"
                 brightness: 1
-        # Bottom Button Triple Press
-        - conditions: '{{ command_type == "bottom_triple_press" }}'
-          sequence:
-            - service: light.turn_on
-              data:
-                entity_id: "{{ device_id }}"
-                brightness: 255
     - choose:
         # Up Button Hold
         - conditions: '{{ command_type == "up_hold" }}'
