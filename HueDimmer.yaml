@@ -19,8 +19,8 @@ blueprint:
           domain: light
           multiple: true
     Top_Press:
-      name: Top Press
-      description: Top button (v2 - power on/off button) pressed (default - turn on light at full brightness and 5000K color temperature)
+      name: Power on/off button Press
+      description: Power on/off button pressed (default - turn on light at full brightness and 5000K color temperature)
       default:
         service: light.turn_on
         data:
@@ -30,32 +30,32 @@ blueprint:
       selector:
         action: null
     Top_Press2x:
-      name: Top Press 2x
-      description: Top button (v2 - power on/off button) pressed 2x (default - perform no action)
+      name: Power on/off button Press 2x
+      description: Power on/off button pressed 2x (default - perform no action)
       default: []
       selector:
         action: null
     Top_Press3x:
-      name: Top Press 3x
-      description: Top button (v2 - power on/off button) pressed 3x (default - perform no action)
+      name: Power on/off button Press 3x
+      description: Power on/off button pressed 3x (default - perform no action)
       default: []
       selector:
         action: null
     Top_Release:
-      name: Top Release
-      description: Top button (v2 - power on/off button) released (default - perform no action)
+      name: Power on/off button Release
+      description: Power on/off button released (default - perform no action)
       default: []
       selector:
         action: null
     Top_HoldPress:
-      name: Top Hold
-      description: Top button (v2 - power on/off button) held down (default - perform no action)
+      name: Power on/off button Hold
+      description: Power on/off button held down (default - perform no action)
       default: []
       selector:
         action: null
     Up_Press:
-      name: Up Press
-      description: Up button (brightness increase) pressed (default - increase brightness by 10%)
+      name: Brightness up button Press
+      description: Brightness up button pressed (default - increase brightness by 10%)
       default:
         service: light.turn_on
         data:
@@ -65,8 +65,8 @@ blueprint:
       selector:
         action: null
     Up_Press2x:
-      name: Up Press 2x
-      description: Up button (brightness increase) pressed 2x (default - set brightness to maximum)
+      name: Brightness up button Press 2x
+      description: Brightness up button pressed 2x (default - set brightness to maximum)
       default:
         service: light.turn_on
         data:
@@ -76,14 +76,14 @@ blueprint:
       selector:
         action: null
     Up_Press3x:
-      name: Up Press 3x
-      description: Up button (brightness increase) pressed 3x (default - perform no action)
+      name: Brightness up button Press 3x
+      description: Brightness up button pressed 3x (default - perform no action)
       default: []
       selector:
         action: null
     Up_HoldPress:
-      name: Up Hold
-      description: Up button (brightness increase) held down (default - increase brightness by 20% every second)
+      name: Brightness up button Hold
+      description: Brightness up button held down (default - increase brightness by 20% every second)
       default:
         service: light.turn_on
         data:
@@ -93,8 +93,8 @@ blueprint:
       selector:
         action: null
     Down_Press:
-      name: Down Press
-      description: Down button (brightness decrease) pressed (default - decrease brightness by 10%)
+      name: Brightness down button Press
+      description: Brightness down button pressed (default - decrease brightness by 10%)
       default:
         service: light.turn_on
         data:
@@ -104,8 +104,8 @@ blueprint:
       selector:
         action: null
     Down_Press2x:
-      name: Down Press 2x
-      description: Down button (brightness decrease) pressed 2x (default - set brightness to minimum)
+      name: Brightness down button Press 2x
+      description: Brightness down button pressed 2x (default - set brightness to minimum)
       default:
         service: light.turn_on
         data:
@@ -115,14 +115,14 @@ blueprint:
       selector:
         action: null
     Down_Press3x:
-      name: Down Press 3x
-      description: Down button (brightness decrease) pressed 3x (default - perform no action)
+      name: Brightness down button Press 3x
+      description: Brightness down button pressed 3x (default - perform no action)
       default: []
       selector:
         action: null
     Down_HoldPress:
-      name: Down Hold
-      description: Down button (brightness decrease) held down (default - decrease brightness by 20% every second, with a minimum of 1%)
+      name: Brightness down button Hold
+      description: Brightness down button held down (default - decrease brightness by 20% every second, with a minimum of 1%)
       default:
         service: light.turn_on
         data:
@@ -132,8 +132,8 @@ blueprint:
       selector:
         action: null
     Bottom_Press:
-      name: Bottom Press
-      description: Bottom button (v2 - power off button) pressed (default - set light to white and turn off)
+      name: Power off button Press
+      description: Power off button pressed (default - set light to white and turn off)
       default:
         service: light.turn_on
         data:
@@ -144,20 +144,20 @@ blueprint:
       selector:
         action: null
     Bottom_Press2x:
-      name: Bottom Press 2x
-      description: Bottom button (v2 - power off button) pressed 2x (default - perform no action)
+      name: Power off button Press 2x
+      description: Power off button pressed 2x (default - perform no action)
       default: []
       selector:
         action: null
     Bottom_Press3x:
-      name: Bottom Press 3x
-      description: Bottom button (v2 - power off button) pressed 3x (default - perform no action)
+      name: Power off button Press 3x
+      description: Power off button pressed 3x (default - perform no action)
       default: []
       selector:
         action: null
     Bottom_HoldPress:
-      name: Bottom Hold
-      description: Bottom button (v2 - power off button) held down (default - perform no action)
+      name: Power off button Hold
+      description: Power off button held down (default - perform no action)
       default: []
       selector:
         action: null
@@ -176,7 +176,7 @@ action:
       press_type: "{{ trigger.event.data.args.press_type }}"
       command_type: "{{ trigger.event.data.command }}"
   - choose:
-      # Top Button (Button 1) - Default Action
+      # Power on/off Button (Button 1) - Default Action
       - conditions: '{{ command_type == "top_press" }}'
         sequence: !input "Top_Press"
       - conditions: '{{ command_type == "top_double_press" }}'
@@ -188,7 +188,7 @@ action:
       - conditions: '{{ command_type == "top_hold" }}'
         sequence: !input "Top_HoldPress"
 
-      # Up Button (Button 2) - Increase Brightness
+      # Brightness Up Button (Button 2) - Increase Brightness
       - conditions: '{{ command_type == "up_press" }}'
         sequence: !input "Up_Press"
       - conditions: '{{ command_type == "up_double_press" }}'
@@ -209,7 +209,7 @@ action:
                     color_temp: 5000
                 - delay: "00:00:01"  # 1 second delay for gradual increase
 
-      # Down Button (Button 3) - Decrease Brightness
+      # Brightness Down Button (Button 3) - Decrease Brightness
       - conditions: '{{ command_type == "down_press" }}'
         sequence: !input "Down_Press"
       - conditions: '{{ command_type == "down_double_press" }}'
@@ -230,7 +230,7 @@ action:
                     color_temp: 5000
                 - delay: "00:00:01"  # 1 second delay for gradual decrease
 
-      # Bottom Button (Button 4) - Default Action
+      # Power off Button (Button 4) - Default Action
       - conditions: '{{ command_type == "bottom_press" }}'
         sequence: !input "Bottom_Press"
       - conditions: '{{ command_type == "bottom_double_press" }}'
