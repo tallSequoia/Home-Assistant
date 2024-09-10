@@ -1,0 +1,52 @@
+blueprint:
+  domain: automation
+  name: Hue v2 Dimmer for Lights
+  description: "Philips Hue v2 Smart Dimmer Switch using Zigbee Home Automation"
+  input:
+    zha_device:
+      name: ZHA Device
+      description: The Philips Hue v2 Smart Dimmer Switch device that will send the commands
+      selector:
+        device:
+          integration: zha
+          model: RWL022
+
+    light_group:
+      name: Light
+      description: The light(s) to control
+      selector:
+        target:
+          entity:
+            domain: light
+
+  trigger:
+    - platform: event
+      event_type: zha_event
+
+  condition:
+    - condition: template
+      value_template: "{{ trigger.event.data.device_id == zha_device.id }}"
+
+  action:
+    - variables:
+        button: "{{ trigger.event.data.args.button }}"
+        command_type: "{{ trigger.event.data.command }}"
+        
+    - choose:
+        # Top Button (Power on/off Button)
+        - conditions:
+            - condition: template
+              value_template: "{{ button == 'top' }}"
+          sequence:
+            - choose:
+                # Single Press
+                - conditions:
+                    - condition: template
+                      value_template: "{{ command_type == 'press' }}"
+                  sequence:
+                    - service: light.turn_on
+                      data:
+                        target: "{{ light_group }}"
+                        brightness: 255
+                        color_temp: 5000
+                        transition: 1
