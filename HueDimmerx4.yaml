@@ -1,23 +1,24 @@
 blueprint:
-  name: Philips Tap Dial Switch
-  description: 'Control lights with a Philips Hue Tap Switch.
-    Use the four buttons to control up to four light(s) with an on/off toggle. The dial can be used to dim the most recently used light.
-    '
+  name: Hue v2 Dimmer for Lights
+  description: "Philips Hue v2 Smart Dimmer Switch using Zigbee Home Automation"
   domain: automation
   input:
-    remote:
-      name: Philips Hue Tap Switch
+    zha_device:
+      name: ZHA Device
+      description: The Dimmer Switch
       selector:
         device:
           integration: zha
-          manufacturer: Signify Netherlands B.V.
-          model: RDM002
+          model: RWL022
+          multiselect: true
+
     first_light:
-      name: First Light
-      description: The light(s) to control with first button
+      name: Light
+      description: The light(s) to control
       selector:
         target:
-          entity: {}
+          entity:
+            domain: light
     second_light:
       name: (OPTIONAL) Second Light
       description: The light(s) to control with second button
