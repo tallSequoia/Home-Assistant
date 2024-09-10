@@ -1,11 +1,12 @@
-# Version 1.11
+# Blueprint Version 1.12
+
 blueprint:
   domain: automation
   name: Philips Hue v2 Smart Dimmer Switch
   description: "Philips Hue v2 Smart Dimmer Switch using Zigbee Home Automation"
   input:
-    zha_devices:
-      name: ZHA Devices
+    zha_device:
+      name: ZHA Device
       description: List of available Philips Hue v2 Smart Dimmer Switch devices
       selector:
         device:
@@ -14,48 +15,28 @@ blueprint:
           multiple: true
     lights:
       name: Lights
-      description: List of lights or light groups to be controlled
+      description: List of lights or light groups to control
       selector:
         target:
-          entity: light
-          multiple: true
+          entity:
+            domain: light
+            multiple: true
     top_press_override:
       name: Top Press Override
-      description: Script to override the default top press action (default - turn on lights at full brightness and 5000K color temperature)
-      default: []
-      selector:
-        action: null
-    brightness_up_override:
-      name: Brightness Up Override
-      description: Script to override the default brightness up action (default - increase brightness by 10%)
-      default: []
-      selector:
-        action: null
-    brightness_down_override:
-      name: Brightness Down Override
-      description: Script to override the default brightness down action (default - decrease brightness by 10%)
-      default: []
-      selector:
-        action: null
-    bottom_press_override:
-      name: Bottom Press Override
-      description: Script to override the default bottom press action (default - set lights to white and minimal brightness before turning off)
+      description: Script to override the default top press action (default - turn on light at full brightness and 5000K color temperature)
       default: []
       selector:
         action: null
   mode: single
   max_exceeded: silent
   variables:
-    zha_devices: !input "zha_devices"
+    device_ids: !input "zha_device"
     lights: !input "lights"
     top_press_override: !input "top_press_override"
-    brightness_up_override: !input "brightness_up_override"
-    brightness_down_override: !input "brightness_down_override"
-    bottom_press_override: !input "bottom_press_override"
   trigger:
     - platform: event
       event_type: zha_event
-  condition: "{{ trigger.event.data.device_id in zha_devices }}"
+  condition: "{{ trigger.event.data.device_id in device_ids }}"
   action:
     - variables:
         button: "{{ trigger.event.data.args.button }}"
@@ -69,8 +50,9 @@ blueprint:
                   sequence: !input "top_press_override"
                 default:
                   - service: light.turn_on
-                    data:
+                    target:
                       entity_id: "{{ lights }}"
+                    data:
                       brightness: 255
                       color_temp: 5000
                       transition: 1
@@ -82,8 +64,9 @@ blueprint:
                   sequence: !input "brightness_up_override"
                 default:
                   - service: light.turn_on
-                    data:
+                    target:
                       entity_id: "{{ lights }}"
+                    data:
                       brightness_step: 10
         # Brightness Down Button
         - conditions: "{{ button == 'down' }}"
@@ -93,10 +76,10 @@ blueprint:
                   sequence: !input "brightness_down_override"
                 default:
                   - service: light.turn_on
-                    data:
+                    target:
                       entity_id: "{{ lights }}"
+                    data:
                       brightness_step: -10
-                      brightness: "{{ state_attr('light.your_light', 'brightness') | int(255) | max(1) }}"
         # Bottom Button (Power Off Button)
         - conditions: "{{ button == 'bottom' }}"
           sequence:
@@ -105,70 +88,79 @@ blueprint:
                   sequence: !input "bottom_press_override"
                 default:
                   - service: light.turn_on
-                    data:
+                    target:
                       entity_id: "{{ lights }}"
+                    data:
                       brightness: 1
                       color_temp: 5000
                       transition: 1
                   - service: light.turn_off
-                    data:
+                    target:
                       entity_id: "{{ lights }}"
     - choose:
         # Up Button Double Press
         - conditions: "{{ command_type == 'up_double_press' }}"
           sequence:
             - service: light.turn_on
-              data:
+              target:
                 entity_id: "{{ lights }}"
+              data:
                 brightness: 255
         # Up Button Triple Press
         - conditions: "{{ command_type == 'up_triple_press' }}"
           sequence:
             - service: light.turn_on
-              data:
+              target:
                 entity_id: "{{ lights }}"
+              data:
                 brightness: 1
         # Down Button Double Press
         - conditions: "{{ command_type == 'down_double_press' }}"
           sequence:
             - service: light.turn_on
-              data:
+              target:
                 entity_id: "{{ lights }}"
+              data:
                 brightness: 1
         # Down Button Triple Press
         - conditions: "{{ command_type == 'down_triple_press' }}"
           sequence:
             - service: light.turn_on
-              data:
+              target:
                 entity_id: "{{ lights }}"
+              data:
                 brightness: 255
         # Top Button Double Press
         - conditions: "{{ command_type == 'top_double_press' }}"
           sequence:
             - service: light.turn_on
-              data:
+              target:
                 entity_id: "{{ lights }}"
+              data:
                 brightness: 255
         # Top Button Triple Press
         - conditions: "{{ command_type == 'top_triple_press' }}"
           sequence:
             - service: light.turn_on
-              data:
+              target:
                 entity_id: "{{ lights }}"
+              data:
                 brightness: 1
         # Bottom Button Double Press
         - conditions: "{{ command_type == 'bottom_double_press' }}"
           sequence:
             - service: light.turn_on
-              data:
+              target:
                 entity_id: "{{ lights }}"
+              data:
                 brightness: 1
         # Bottom Button Triple Press
         - conditions: "{{ command_type == 'bottom_triple_press' }}"
           sequence:
             - service: light.turn_on
-              data:
+              target:
                 entity_id: "{{ lights }}"
+              data:
                 brightness: 255
     - choose:
         # Up Button Hold
@@ -181,8 +173,9 @@ blueprint:
                     state: "on"
                 sequence:
                   - service: light.turn_on
-                    data:
+                    target:
                       entity_id: "{{ lights }}"
+                    data:
                       brightness_step: 20
         # Down Button Hold
         - conditions: "{{ command_type == 'down_hold' }}"
@@ -194,8 +187,9 @@ blueprint:
                     state: "on"
                 sequence:
                   - service: light.turn_on
-                    data:
+                    target:
                       entity_id: "{{ lights }}"
+                    data:
                       brightness_step: -20
         # Top Button Hold
         - conditions: "{{ command_type == 'top_hold' }}"
