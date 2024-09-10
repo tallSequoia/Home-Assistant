@@ -1,4 +1,4 @@
-# Blueprint version 1.17
+# Blueprint version 1.18
 blueprint:
   domain: automation
   name: Hue v2 Dimmer for Lights
@@ -23,17 +23,9 @@ blueprint:
           entity:
             domain: light
 
-    top_press_override:
-      name: Top Press Override
-      description: Script to override the default top press action
-      default: []
-      selector:
-        action: null
-
   variables:
     device_id: !input "zha_device"
     light_group: !input "light_group"
-    top_press_override: !input "top_press_override"
 
   trigger:
     - platform: event
@@ -62,18 +54,12 @@ blueprint:
                     - condition: template
                       value_template: "{{ command_type == 'press' }}"
                   sequence:
-                    - choose:
-                        - conditions:
-                            - condition: template
-                              value_template: "{{ top_press_override }}"
-                          sequence: !input "top_press_override"
-                        default:
-                          - service: light.turn_on
-                            data:
-                              entity_id: "{{ light_group }}"
-                              brightness: 255
-                              color_temp: 5000
-                              transition: 1
+                    - service: light.turn_on
+                      data:
+                        entity_id: "{{ light_group }}"
+                        brightness: 255
+                        color_temp: 5000
+                        transition: 1
 
                 # Top Double Press
                 - conditions:
