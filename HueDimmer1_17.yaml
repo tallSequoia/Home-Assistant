@@ -1,0 +1,257 @@
+# Blueprint version 1.17
+blueprint:
+  domain: automation
+  name: Hue v2 Dimmer for Lights
+  description: "Philips Hue v2 Smart Dimmer Switch using Zigbee Home Automation"
+  mode: single
+  max_exceeded: silent
+
+  input:
+    zha_device:
+      name: ZHA Device
+      description: The Philips Hue v2 Smart Dimmer Switch device that will send the commands
+      selector:
+        device:
+          integration: zha
+          model: RWL022
+
+    light_group:
+      name: Light (Group)
+      description: The light or light group to control
+      selector:
+        target:
+          entity:
+            domain: light
+
+    top_press_override:
+      name: Top Press Override
+      description: Script to override the default top press action
+      default: []
+      selector:
+        action: null
+
+  variables:
+    device_id: !input "zha_device"
+    light_group: !input "light_group"
+    top_press_override: !input "top_press_override"
+
+  trigger:
+    - platform: event
+      event_type: zha_event
+
+  condition: "{{ trigger.event.data.device_id == device_id }}"
+
+  action:
+    - variables:
+        button: "{{ trigger.event.data.args.button }}"
+        command_type: "{{ trigger.event.data.command }}"
+
+    - choose:
+
+        ######################################################################
+        ## Top Button Logic
+        ######################################################################
+        - conditions:
+            - condition: template
+              value_template: "{{ button == 'top' }}"
+
+          sequence:
+            - choose:
+                # Top Single Press
+                - conditions:
+                    - condition: template
+                      value_template: "{{ command_type == 'press' }}"
+                  sequence:
+                    - choose:
+                        - conditions:
+                            - condition: template
+                              value_template: "{{ top_press_override }}"
+                          sequence: !input "top_press_override"
+                        default:
+                          - service: light.turn_on
+                            data:
+                              entity_id: "{{ light_group }}"
+                              brightness: 255
+                              color_temp: 5000
+                              transition: 1
+
+                # Top Double Press
+                - conditions:
+                    - condition: template
+                      value_template: "{{ command_type == 'top_double_press' }}"
+                  sequence:
+                    - service: light.turn_on
+                      data:
+                        entity_id: "{{ light_group }}"
+                        brightness: 255
+
+                # Top Triple Press
+                - conditions:
+                    - condition: template
+                      value_template: "{{ command_type == 'top_triple_press' }}"
+                  sequence: []  # Allow for future customization
+
+                # Top Hold
+                - conditions:
+                    - condition: template
+                      value_template: "{{ command_type == 'top_hold' }}"
+                  sequence: []
+
+        ######################################################################
+        ## Up Button Logic
+        ######################################################################
+        - conditions:
+            - condition: template
+              value_template: "{{ button == 'up' }}"
+
+          sequence:
+            - choose:
+                # Up Single Press
+                - conditions:
+                    - condition: template
+                      value_template: "{{ command_type == 'press' }}"
+                  sequence:
+                    - service: light.turn_on
+                      data:
+                        entity_id: "{{ light_group }}"
+                        brightness_step: 10
+
+                # Up Double Press
+                - conditions:
+                    - condition: template
+                      value_template: "{{ command_type == 'up_double_press' }}"
+                  sequence:
+                    - service: light.turn_on
+                      data:
+                        entity_id: "{{ light_group }}"
+                        brightness: 255
+
+                # Up Triple Press
+                - conditions:
+                    - condition: template
+                      value_template: "{{ command_type == 'up_triple_press' }}"
+                  sequence: []  # Allow for future customization
+
+                # Up Hold
+                - conditions:
+                    - condition: template
+                      value_template: "{{ command_type == 'up_hold' }}"
+                  sequence:
+                    - repeat:
+                        while:
+                          - condition: state
+                            entity_id: "{{ light_group }}"
+                            state: "on"
+                        sequence:
+                          - service: light.turn_on
+                            data:
+                              entity_id: "{{ light_group }}"
+                              brightness_step: 20
+
+        ######################################################################
+        ## Down Button Logic
+        ######################################################################
+        - conditions:
+            - condition: template
+              value_template: "{{ button == 'down' }}"
+
+          sequence:
+            - choose:
+                # Down Single Press
+                - conditions:
+                    - condition: template
+                      value_template: "{{ command_type == 'press' }}"
+                  sequence:
+                    - service: light.turn_on
+                      data:
+                        entity_id: "{{ light_group }}"
+                        brightness_step: -10
+
+                # Down Double Press
+                - conditions:
+                    - condition: template
+                      value_template: "{{ command_type == 'down_double_press' }}"
+                  sequence:
+                    - service: light.turn_on
+                      data:
+                        entity_id: "{{ light_group }}"
+                        brightness_pct: 1
+
+                # Down Triple Press
+                - conditions:
+                    - condition: template
+                      value_template: "{{ command_type == 'down_triple_press' }}"
+                  sequence: []  # Allow for future customization
+
+                # Down Hold
+                - conditions:
+                    - condition: template
+                      value_template: "{{ command_type == 'down_hold' }}"
+                  sequence:
+                    - repeat:
+                        while:
+                          - condition: state
+                            entity_id: "{{ light_group }}"
+                            state: "on"
+                        sequence:
+                          - service: light.turn_on
+                            data:
+                              entity_id: "{{ light_group }}"
+                              brightness: >
+                                {% set current_brightness = state_attr(light_group, 'brightness') %}
+                                {% set new_brightness = current_brightness - 20 %}
+                                {% if new_brightness < 3 %}
+                                  3
+                                {% else %}
+                                  {{ new_brightness }}
+                                {% endif %}
+
+        ######################################################################
+        ## Bottom Button Logic
+        ######################################################################
+        - conditions:
+            - condition: template
+              value_template: "{{ button == 'bottom' }}"
+
+          sequence:
+            - choose:
+                # Bottom Single Press
+                - conditions:
+                    - condition: template
+                      value_template: "{{ command_type == 'press' }}"
+                  sequence:
+                    - service: light.turn_on
+                      data:
+                        entity_id: "{{ light_group }}"
+                        brightness: 1
+                        color_temp: 5000
+                        transition: 1
+                    - service: light.turn_off
+                      data:
+                        entity_id: "{{ light_group }}"
+
+                # Bottom Double Press
+                - conditions:
+                    - condition: template
+                      value_template: "{{ command_type == 'bottom_double_press' }}"
+                  sequence:
+                    - service: light.turn_on
+                      data:
+                        entity_id: "{{ light_group }}"
+                        brightness: 1
+
+                # Bottom Triple Press
+                - conditions:
+                    - condition: template
+                      value_template: "{{ command_type == 'bottom_triple_press' }}"
+                  sequence:
+                    - service: light.turn_on
+                      data:
+                        entity_id: "{{ light_group }}"
+                        brightness: 255
+
+                # Bottom Hold
+                - conditions:
+                    - condition: template
+                      value_template: "{{ command_type == 'bottom_hold' }}"
+                  sequence: []
