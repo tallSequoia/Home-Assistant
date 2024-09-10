@@ -40,10 +40,14 @@ blueprint:
         message: "{{ command_type }}"
     - choose:
         # Top Button (Power on/off Button)
-        - conditions: '{{ button == "top" }}'
+        - conditions:
+            - condition: template
+              value_template: "{{ button == 'top' }}"
           sequence:
             - choose:
-                - conditions: '{{ top_press_override }}'
+                - conditions:
+                    - condition: template
+                      value_template: "{{ top_press_override }}"
                   sequence: !input "top_press_override"
                 default:
                   - service: light.turn_on
@@ -53,10 +57,14 @@ blueprint:
                       color_temp: 5000
                       transition: 1
         # Brightness Up Button
-        - conditions: '{{ button == "up" }}'
+        - conditions:
+            - condition: template
+              value_template: "{{ button == 'up' }}"
           sequence:
             - choose:
-                - conditions: '{{ brightness_up_override }}'
+                - conditions:
+                    - condition: template
+                      value_template: "{{ brightness_up_override }}"
                   sequence: !input "brightness_up_override"
                 default:
                   - service: light.turn_on
@@ -64,10 +72,14 @@ blueprint:
                       entity_id: "{{ device_id }}"
                       brightness_step: 10
         # Brightness Down Button
-        - conditions: '{{ button == "down" }}'
+        - conditions:
+            - condition: template
+              value_template: "{{ button == 'down' }}"
           sequence:
             - choose:
-                - conditions: '{{ brightness_down_override }}'
+                - conditions:
+                    - condition: template
+                      value_template: "{{ brightness_down_override }}"
                   sequence: !input "brightness_down_override"
                 default:
                   - service: light.turn_on
@@ -76,10 +88,14 @@ blueprint:
                       brightness_step: -10
                       brightness: "{{ state_attr(device_id, 'brightness')|default(255) | max(1) }}"
         # Bottom Button (Power Off Button)
-        - conditions: '{{ button == "bottom" }}'
+        - conditions:
+            - condition: template
+              value_template: "{{ button == 'bottom' }}"
           sequence:
             - choose:
-                - conditions: '{{ bottom_press_override }}'
+                - conditions:
+                    - condition: template
+                      value_template: "{{ bottom_press_override }}"
                   sequence: !input "bottom_press_override"
                 default:
                   - service: light.turn_on
@@ -93,28 +109,36 @@ blueprint:
                       entity_id: "{{ device_id }}"
     - choose:
         # Up Button Double Press
-        - conditions: '{{ command_type == "up_double_press" }}'
+        - conditions:
+            - condition: template
+              value_template: "{{ command_type == 'up_double_press' }}"
           sequence:
             - service: light.turn_on
               data:
                 entity_id: "{{ device_id }}"
                 brightness: 255
         # Down Button Double Press
-        - conditions: '{{ command_type == "down_double_press" }}'
+        - conditions:
+            - condition: template
+              value_template: "{{ command_type == 'down_double_press' }}"
           sequence:
             - service: light.turn_on
               data:
                 entity_id: "{{ device_id }}"
                 brightness: 1
         # Top Button Double Press
-        - conditions: '{{ command_type == "top_double_press" }}'
+        - conditions:
+            - condition: template
+              value_template: "{{ command_type == 'top_double_press' }}"
           sequence:
             - service: light.turn_on
               data:
                 entity_id: "{{ device_id }}"
                 brightness: 255
         # Bottom Button Double Press
-        - conditions: '{{ command_type == "bottom_double_press" }}'
+        - conditions:
+            - condition: template
+              value_template: "{{ command_type == 'bottom_double_press' }}"
           sequence:
             - service: light.turn_on
               data:
@@ -122,7 +146,9 @@ blueprint:
                 brightness: 1
     - choose:
         # Up Button Hold
-        - conditions: '{{ command_type == "up_hold" }}'
+        - conditions:
+            - condition: template
+              value_template: "{{ command_type == 'up_hold' }}"
           sequence:
             - repeat:
                 while:
@@ -135,7 +161,9 @@ blueprint:
                       entity_id: "{{ device_id }}"
                       brightness_step: 20
         # Down Button Hold
-        - conditions: '{{ command_type == "down_hold" }}'
+        - conditions:
+            - condition: template
+              value_template: "{{ command_type == 'down_hold' }}"
           sequence:
             - repeat:
                 while:
@@ -148,8 +176,12 @@ blueprint:
                       entity_id: "{{ device_id }}"
                       brightness_step: -20
         # Top Button Hold
-        - conditions: '{{ command_type == "top_hold" }}'
+        - conditions:
+            - condition: template
+              value_template: "{{ command_type == 'top_hold' }}"
           sequence: []
         # Bottom Button Hold
-        - conditions: '{{ command_type == "bottom_hold" }}'
+        - conditions:
+            - condition: template
+              value_template: "{{ command_type == 'bottom_hold' }}"
           sequence: []
