@@ -1,50 +1,50 @@
 blueprint:
   domain: automation
-  name: Philips Hue v1/v2 Smart Dimmer Switch and Remote
-  description: Philips Hue v1 (RWL021) / v2 (RWL022) Smart Dimmer Switch and Remote using Zigbee Home Automation
+  name: Philips Hue v2 Smart Dimmer Switch and Remote
+  description: Philips Hue v2 (RWL022) Smart Dimmer Switch and Remote using Zigbee Home Automation
   input:
     zha_devices:
-      name: Philips Hue v1/v2 Smart Dimmer Switch and Remote
-      description: Select one or more Philips Hue v1 (RWL021) or v2 (RWL022) Smart Dimmer Switch and Remote devices
+      name: Philips Hue Smart Dimmer Switch and Remote
+      description: Select one or more Philips Hue v2 (RWL022) Smart Dimmer Switch and Remote devices
       selector:
         device:
           integration: zha
-          model:
-            - RWL021
-            - RWL022
-    light_entity:
-      name: Light
-      description: The light entity to control
+          model: RWL022
+          multiple: true
+    light_entities:
+      name: Lights
+      description: The light entities to control
       selector:
         entity:
           domain: light
+          multiple: true
     Top_Press:
       name: Top Press
-      description: Top button (v1 - power on button, v2 - power on/off button) pressed
+      description: Top button (v2 - power on/off button) pressed
       default: []
       selector:
         action: null
     Top_Press2x:
       name: Top Press 2x
-      description: Top button (v1 - power on button, v2 - power on/off button) pressed 2x
+      description: Top button (v2 - power on/off button) pressed 2x
       default: []
       selector:
         action: null
     Top_Press3x:
       name: Top Press 3x
-      description: Top button (v1 - power on button, v2 - power on/off button) pressed 3x
+      description: Top button (v2 - power on/off button) pressed 3x
       default: []
       selector:
         action: null
     Top_Release:
       name: Top Release
-      description: Top button (v1 - power on button, v2 - power on/off button) released
+      description: Top button (v2 - power on/off button) released
       default: []
       selector:
         action: null
     Top_HoldPress:
       name: Top Hold
-      description: Top button (v1 - power on button, v2 - power on/off button) held down
+      description: Top button (v2 - power on/off button) held down
       default: []
       selector:
         action: null
@@ -98,19 +98,19 @@ blueprint:
         action: null
     Bottom_Press:
       name: Bottom Press
-      description: Bottom button (v1 - hue button, v2 - power off button) pressed
+      description: Bottom button (v2 - power off button) pressed
       default: []
       selector:
         action: null
     Bottom_Press2x:
       name: Bottom Press 2x
-      description: Bottom button (v1 - hue button, v2 - power off button) pressed 2x
+      description: Bottom button (v2 - power off button) pressed 2x
       default: []
       selector:
         action: null
     Bottom_Press3x:
       name: Bottom Press 3x
-      description: Bottom button (v1 - hue button, v2 - power off button) pressed 3x
+      description: Bottom button (v2 - power off button) pressed 3x
       default: []
       selector:
         action: null
@@ -118,6 +118,7 @@ mode: single
 max_exceeded: silent
 variables:
   device_ids: !input "zha_devices"
+  light_entities: !input "light_entities"
 trigger:
   - platform: event
     event_type: zha_event
@@ -133,7 +134,7 @@ action:
         sequence:
           - service: light.turn_on
             data:
-              entity_id: !input "light_entity"
+              entity_id: "{{ light_entities }}"
               brightness_step_pct: 10
       - conditions: '{{ command_type == "up_double_press" }}'
         sequence: !input "Up_Press2x"
@@ -143,7 +144,7 @@ action:
         sequence:
           - service: light.turn_on
             data:
-              entity_id: !input "light_entity"
+              entity_id: "{{ light_entities }}"
               brightness_step_pct: 20
 
       # Down Button (Button 3) - Decrease Brightness with a minimum brightness of 1%
@@ -153,11 +154,11 @@ action:
               - conditions:
                   - condition: template
                     value_template: >
-                      {{ state_attr(!input "light_entity", "brightness")|int > 3 }}
+                      {{ state_attr(entity, "brightness")|int > 3 }}
                 sequence:
                   - service: light.turn_on
                     data:
-                      entity_id: !input "light_entity"
+                      entity_id: "{{ light_entities }}"
                       brightness_step_pct: -10
       - conditions: '{{ command_type == "down_double_press" }}'
         sequence: !input "Down_Press2x"
@@ -169,19 +170,19 @@ action:
               - conditions:
                   - condition: template
                     value_template: >
-                      {{ state_attr(!input "light_entity", "brightness")|int > 3 }}
+                      {{ state_attr(entity, "brightness")|int > 3 }}
                 sequence:
                   - service: light.turn_on
                     data:
-                      entity_id: !input "light_entity"
+                      entity_id: "{{ light_entities }}"
                       brightness_step_pct: -20
-              
+
       # Bottom Button (Button 4) - Turn off light
       - conditions: '{{ command_type == "off_press" }}'
         sequence:
           - service: light.turn_off
             data:
-              entity_id: !input "light_entity"
+              entity_id: "{{ light_entities }}"
       - conditions: '{{ command_type == "off_double_press" }}'
         sequence: !input "Bottom_Press2x"
       - conditions: '{{ command_type == "off_triple_press" }}'
