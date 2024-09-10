@@ -1,0 +1,202 @@
+blueprint:
+  domain: automation
+  name: Philips Hue v1/v2 Smart Dimmer Switch and Remote
+  description: Philips Hue v1 (RWL021) / v2 (RWL022) Smart Dimmer Switch and Remote using Zigbee Home Automation
+  input:
+    zha_devices:
+      name: Philips Hue v1/v2 Smart Dimmer Switch and Remote
+      description: Select one or more Philips Hue v1 (RWL021) or v2 (RWL022) Smart Dimmer Switch and Remote devices
+      selector:
+        target:
+          entity:
+            integration: zha
+            device:
+              model:
+                - RWL021
+                - RWL022
+    light_entity:
+      name: Light
+      description: The light entity to control
+      selector:
+        entity:
+          domain: light
+    Top_Press:
+      name: Top Press
+      description: Top button (v1 - power on button, v2 - power on/off button) pressed
+      default: []
+      selector:
+        action: null
+    Top_Press2x:
+      name: Top Press 2x
+      description: Top button (v1 - power on button, v2 - power on/off button) pressed 2x
+      default: []
+      selector:
+        action: null
+    Top_Press3x:
+      name: Top Press 3x
+      description: Top button (v1 - power on button, v2 - power on/off button) pressed 3x
+      default: []
+      selector:
+        action: null
+    Top_Release:
+      name: Top Release
+      description: Top button (v1 - power on button, v2 - power on/off button) released
+      default: []
+      selector:
+        action: null
+    Top_HoldPress:
+      name: Top Hold
+      description: Top button (v1 - power on button, v2 - power on/off button) held down
+      default: []
+      selector:
+        action: null
+    Up_Press:
+      name: Up Press
+      description: Up button (brightness increase) pressed
+      default: []
+      selector:
+        action: null
+    Up_Press2x:
+      name: Up Press 2x
+      description: Up button (brightness increase) pressed 2x
+      default: []
+      selector:
+        action: null
+    Up_Press3x:
+      name: Up Press 3x
+      description: Up button (brightness increase) pressed 3x
+      default: []
+      selector:
+        action: null
+    Up_HoldPress:
+      name: Up Hold
+      description: Up button (brightness increase) held down
+      default: []
+      selector:
+        action: null
+    Down_Press:
+      name: Down Press
+      description: Down button (brightness decrease) pressed
+      default: []
+      selector:
+        action: null
+    Down_Press2x:
+      name: Down Press 2x
+      description: Down button (brightness decrease) pressed 2x
+      default: []
+      selector:
+        action: null
+    Down_Press3x:
+      name: Down Press 3x
+      description: Down button (brightness decrease) pressed 3x
+      default: []
+      selector:
+        action: null
+    Down_HoldPress:
+      name: Down Hold
+      description: Down button (brightness decrease) held down
+      default: []
+      selector:
+        action: null
+    Bottom_Press:
+      name: Bottom Press
+      description: Bottom button (v1 - hue button, v2 - power off button) pressed
+      default: []
+      selector:
+        action: null
+    Bottom_Press2x:
+      name: Bottom Press 2x
+      description: Bottom button (v1 - hue button, v2 - power off button) pressed 2x
+      default: []
+      selector:
+        action: null
+    Bottom_Press3x:
+      name: Bottom Press 3x
+      description: Bottom button (v1 - hue button, v2 - power off button) pressed 3x
+      default: []
+      selector:
+        action: null
+mode: single
+max_exceeded: silent
+variables:
+  device_ids: !input "zha_devices"
+trigger:
+  - platform: event
+    event_type: zha_event
+condition: "{{ trigger.event.data.device_id in device_ids }}"
+action:
+  - variables:
+      button: "{{ trigger.event.data.args.button }}"
+      press_type: "{{ trigger.event.data.args.press_type }}"
+      command_type: "{{ trigger.event.data.command }}"
+  - choose:
+      # Up Button (Button 2) - Increase Brightness
+      - conditions: '{{ command_type == "up_press" }}'
+        sequence:
+          - service: light.turn_on
+            data:
+              entity_id: !input "light_entity"
+              brightness_step_pct: 10
+      - conditions: '{{ command_type == "up_double_press" }}'
+        sequence: !input "Up_Press2x"
+      - conditions: '{{ command_type == "up_triple_press" }}'
+        sequence: !input "Up_Press3x"
+      - conditions: '{{ command_type == "up_hold" }}'
+        sequence:
+          - service: light.turn_on
+            data:
+              entity_id: !input "light_entity"
+              brightness_step_pct: 20
+
+      # Down Button (Button 3) - Decrease Brightness with a minimum brightness of 1%
+      - conditions: '{{ command_type == "down_press" }}'
+        sequence:
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: >
+                      {{ state_attr(!input "light_entity", "brightness")|int > 3 }}
+                sequence:
+                  - service: light.turn_on
+                    data:
+                      entity_id: !input "light_entity"
+                      brightness_step_pct: -10
+      - conditions: '{{ command_type == "down_double_press" }}'
+        sequence: !input "Down_Press2x"
+      - conditions: '{{ command_type == "down_triple_press" }}'
+        sequence: !input "Down_Press3x"
+      - conditions: '{{ command_type == "down_hold" }}'
+        sequence:
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: >
+                      {{ state_attr(!input "light_entity", "brightness")|int > 3 }}
+                sequence:
+                  - service: light.turn_on
+                    data:
+                      entity_id: !input "light_entity"
+                      brightness_step_pct: -20
+              
+      # Bottom Button (Button 4) - Turn off light
+      - conditions: '{{ command_type == "off_press" }}'
+        sequence:
+          - service: light.turn_off
+            data:
+              entity_id: !input "light_entity"
+      - conditions: '{{ command_type == "off_double_press" }}'
+        sequence: !input "Bottom_Press2x"
+      - conditions: '{{ command_type == "off_triple_press" }}'
+        sequence: !input "Bottom_Press3x"
+              
+      # Top Button (Button 1) - Custom Actions
+      - conditions: '{{ command_type == "on_press" }}'
+        sequence: !input "Top_Press"
+      - conditions: '{{ command_type == "on_double_press" }}'
+        sequence: !input "Top_Press2x"
+      - conditions: '{{ command_type == "on_triple_press" }}'
+        sequence: !input "Top_Press3x"
+      - conditions: '{{ command_type == "on_short_release" }}'
+        sequence: !input "Top_Release"
+      - conditions: '{{ command_type == "on_hold" }}'
+        sequence: !input "Top_HoldPress"
