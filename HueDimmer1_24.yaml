@@ -1,4 +1,4 @@
-# Blueprint version 1.23
+# Blueprint version 1.24
 blueprint:
   domain: automation
   name: Hue v2 Dimmer for Lights
@@ -32,7 +32,7 @@ blueprint:
     - variables:
         button: "{{ trigger.event.data.args.button }}"
         command_type: "{{ trigger.event.data.command }}"
-        
+
     - choose:
         # Top Button (Power on/off Button)
         - conditions:
@@ -56,21 +56,13 @@ blueprint:
                 - conditions:
                     - condition: template
                       value_template: "{{ command_type == 'double_press' }}"
-                  sequence:
-                    - service: light.turn_on
-                      data:
-                        target: "{{ light_group }}"
-                        brightness: 255
+                  sequence: []
                         
                 # Triple Press
                 - conditions:
                     - condition: template
                       value_template: "{{ command_type == 'triple_press' }}"
-                  sequence:
-                    - service: light.turn_on
-                      data:
-                        target: "{{ light_group }}"
-                        brightness: 1
+                  sequence: []
                         
                 # Hold
                 - conditions:
@@ -108,11 +100,7 @@ blueprint:
                 - conditions:
                     - condition: template
                       value_template: "{{ command_type == 'triple_press' }}"
-                  sequence:
-                    - service: light.turn_on
-                      data:
-                        target: "{{ light_group }}"
-                        brightness: 1
+                  sequence: []
 
                 # Hold
                 - conditions:
@@ -128,7 +116,7 @@ blueprint:
                           - service: light.turn_on
                             data:
                               target: "{{ light_group }}"
-                              brightness_step: 20
+                              brightness_step: 30
 
         # Brightness Down Button
         - conditions:
@@ -144,7 +132,14 @@ blueprint:
                     - service: light.turn_on
                       data:
                         target: "{{ light_group }}"
-                        brightness_step: -10
+                        brightness: >
+                          {% set current_brightness = state_attr(light_group, 'brightness') | default(255) %}
+                          {% set new_brightness = current_brightness - 20 %}
+                          {% if new_brightness < 3 %}
+                            3
+                          {% else %}
+                            {{ new_brightness }}
+                          {% endif %}
 
                 # Double Press
                 - conditions:
@@ -154,17 +149,13 @@ blueprint:
                     - service: light.turn_on
                       data:
                         target: "{{ light_group }}"
-                        brightness_pct: 1
+                        brightness: 3
 
                 # Triple Press
                 - conditions:
                     - condition: template
                       value_template: "{{ command_type == 'triple_press' }}"
-                  sequence:
-                    - service: light.turn_on
-                      data:
-                        target: "{{ light_group }}"
-                        brightness: 255
+                  sequence: []
 
                 # Hold
                 - conditions:
@@ -182,7 +173,7 @@ blueprint:
                               target: "{{ light_group }}"
                               brightness: >
                                 {% set current_brightness = state_attr(light_group, 'brightness') | default(255) %}
-                                {% set new_brightness = current_brightness - 20 %}
+                                {% set new_brightness = current_brightness - 30 %}
                                 {% if new_brightness < 3 %}
                                   3
                                 {% else %}
@@ -203,32 +194,24 @@ blueprint:
                     - service: light.turn_on
                       data:
                         target: "{{ light_group }}"
-                        brightness: 3
+                        brightness: 1
                         color_temp: 5000
                         transition: 1
                     - service: light.turn_off
                       data:
                         target: "{{ light_group }}"
-                        
+
                 # Double Press
                 - conditions:
                     - condition: template
                       value_template: "{{ command_type == 'double_press' }}"
-                  sequence:
-                    - service: light.turn_on
-                      data:
-                        target: "{{ light_group }}"
-                        brightness: 1
-                        
+                  sequence: []
+
                 # Triple Press
                 - conditions:
                     - condition: template
                       value_template: "{{ command_type == 'triple_press' }}"
-                  sequence:
-                    - service: light.turn_on
-                      data:
-                        target: "{{ light_group }}"
-                        brightness: 255
+                  sequence: []
 
                 # Hold
                 - conditions:
