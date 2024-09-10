@@ -1,4 +1,4 @@
-# Blueprint version 34
+# Blueprint version 36
 blueprint:
   name: Hue v2 Dimmer for Lights
   description: "Philips Hue v2 Smart Dimmer Switch using Zigbee Home Automation"
@@ -52,12 +52,12 @@ trigger:
   - platform: event
     event_type: zha_event
     event_data:
-      dimmer_switch: !input "dimmer_switch"
+      device_ieee: !input "dimmer_switch"
 
 
 condition:
   - condition: template
-    value_template: "{{ trigger.event.data.device_id == input.dimmer_switch.id }}"
+    value_template: "{{ trigger.event.data.device_ieee == input.dimmer_switch }}"
 
 
 action:
