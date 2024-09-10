@@ -10,7 +10,6 @@ blueprint:
         device:
           integration: zha
           model: RWL022
-          multiselect: true
 
     first_light:
       name: Light
