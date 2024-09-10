@@ -178,12 +178,7 @@ action:
   - choose:
       # Top Button (Button 1) - Default Action
       - conditions: '{{ command_type == "top_press" }}'
-        sequence:
-          - service: light.turn_on
-            data:
-              entity_id: "{{ light_entities }}"
-              brightness: 255
-              color_temp: 5000
+        sequence: !input "Top_Press"
       - conditions: '{{ command_type == "top_double_press" }}'
         sequence: !input "Top_Press2x"
       - conditions: '{{ command_type == "top_triple_press" }}'
@@ -195,82 +190,49 @@ action:
 
       # Up Button (Button 2) - Increase Brightness
       - conditions: '{{ command_type == "up_press" }}'
-        sequence:
-          - service: light.turn_on
-            data:
-              entity_id: "{{ light_entities }}"
-              brightness_step_pct: 10
-              color_temp: 5000
+        sequence: !input "Up_Press"
       - conditions: '{{ command_type == "up_double_press" }}'
-        sequence:
-          - service: light.turn_on
-            data:
-              entity_id: "{{ light_entities }}"
-              brightness: 255  # Set brightness to maximum
-              color_temp: 5000
+        sequence: !input "Up_Press2x"
       - conditions: '{{ command_type == "up_triple_press" }}'
         sequence: !input "Up_Press3x"
       - conditions: '{{ command_type == "up_hold" }}'
         sequence:
           - repeat:
               while:
-                - condition: state
-                  entity_id: "{{ trigger.event.data.device_id }}"
-                  state: "on"  # Ensure that the light is still on
+                - condition: template
+                  value_template: "{{ is_state_attr('light', 'brightness', 'on') }}"
               sequence:
                 - service: light.turn_on
                   data:
                     entity_id: "{{ light_entities }}"
                     brightness_step_pct: 20
                     color_temp: 5000
-                - delay: "00:00:01"  # 1 second delay to avoid rapid changes
+                - delay: "00:00:01"  # 1 second delay for gradual increase
 
       # Down Button (Button 3) - Decrease Brightness
       - conditions: '{{ command_type == "down_press" }}'
-        sequence:
-          - service: light.turn_on
-            data:
-              entity_id: "{{ light_entities }}"
-              brightness_step_pct: -10
-              color_temp: 5000
+        sequence: !input "Down_Press"
       - conditions: '{{ command_type == "down_double_press" }}'
-        sequence:
-          - service: light.turn_on
-            data:
-              entity_id: "{{ light_entities }}"
-              brightness: 1  # Set brightness to minimum
-              color_temp: 5000
+        sequence: !input "Down_Press2x"
       - conditions: '{{ command_type == "down_triple_press" }}'
         sequence: !input "Down_Press3x"
       - conditions: '{{ command_type == "down_hold" }}'
         sequence:
           - repeat:
               while:
-                - condition: state
-                  entity_id: "{{ trigger.event.data.device_id }}"
-                  state: "on"  # Ensure that the light is still on
+                - condition: template
+                  value_template: "{{ is_state_attr('light', 'brightness', 'on') }}"
               sequence:
-                - choose:
-                    - conditions:
-                        - condition: template
-                          value_template: >
-                            {{ state_attr(trigger.event.data.device_id, 'brightness') | int > 1 }}
-                      sequence:
-                        - service: light.turn_on
-                          data:
-                            entity_id: "{{ light_entities }}"
-                            brightness_step_pct: -20
-                            color_temp: 5000
-                - delay: "00:00:01"  # 1 second delay to avoid rapid changes
+                - service: light.turn_on
+                  data:
+                    entity_id: "{{ light_entities }}"
+                    brightness_step_pct: -20
+                    color_temp: 5000
+                - delay: "00:00:01"  # 1 second delay for gradual decrease
+
       # Bottom Button (Button 4) - Default Action
       - conditions: '{{ command_type == "bottom_press" }}'
-        sequence:
-          - service: light.turn_on
-            data:
-              entity_id: "{{ light_entities }}"
-              color_name: "white"
-              brightness: 1
-              color_temp: 5000
+        sequence: !input "Bottom_Press"
       - conditions: '{{ command_type == "bottom_double_press" }}'
         sequence: !input "Bottom_Press2x"
       - conditions: '{{ command_type == "bottom_triple_press" }}'
