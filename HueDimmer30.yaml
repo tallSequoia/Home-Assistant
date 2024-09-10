@@ -1,10 +1,8 @@
-# Blueprint version 1.21
+# Blueprint version 30
 blueprint:
   name: Hue v2 Dimmer for Lights
   description: "Philips Hue v2 Smart Dimmer Switch using Zigbee Home Automation"
   domain: automation
-  mode: restart
-  max_exceeded: silent  
   input:
     zha_device:
       name: ZHA Device
@@ -22,9 +20,15 @@ blueprint:
           entity:
             domain: light
 
+
+mode: restart
+max_exceeded: silent
+
 trigger:
   - platform: event
     event_type: zha_event
+    event_data:
+      zha_device: !input "zha_device"
 
 condition:
   - condition: template
@@ -35,7 +39,7 @@ action:
       button: "{{ trigger.event.data.args.button }}"
       command_type: "{{ trigger.event.data.command }}"
       light_group: !input "light_group"
-      zha_device: !input "zha_device"
+
 
   - choose:
 
