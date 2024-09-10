@@ -20,97 +20,114 @@ blueprint:
           multiple: true
     Top_Press:
       name: Top Press
-      description: Top button (v2 - power on/off button) pressed
+      description: Top button (v2 - power on/off button) pressed (default: perform no action)
       default: []
       selector:
         action: null
     Top_Press2x:
       name: Top Press 2x
-      description: Top button (v2 - power on/off button) pressed 2x
+      description: Top button (v2 - power on/off button) pressed 2x (default: perform no action)
       default: []
       selector:
         action: null
     Top_Press3x:
       name: Top Press 3x
-      description: Top button (v2 - power on/off button) pressed 3x
+      description: Top button (v2 - power on/off button) pressed 3x (default: perform no action)
       default: []
       selector:
         action: null
     Top_Release:
       name: Top Release
-      description: Top button (v2 - power on/off button) released
+      description: Top button (v2 - power on/off button) released (default: perform no action)
       default: []
       selector:
         action: null
     Top_HoldPress:
       name: Top Hold
-      description: Top button (v2 - power on/off button) held down
+      description: Top button (v2 - power on/off button) held down (default: perform no action)
       default: []
       selector:
         action: null
     Up_Press:
       name: Up Press
-      description: Up button (brightness increase) pressed
-      default: []
+      description: Up button (brightness increase) pressed (default: increase brightness by 10%)
+      default:
+        service: light.turn_on
+        data:
+          brightness_step_pct: 10
+          color_temp: 5000
       selector:
         action: null
     Up_Press2x:
       name: Up Press 2x
-      description: Up button (brightness increase) pressed 2x
-      default: []
-      selector:
-        action: null
-    Up_Press3x:
-      name: Up Press 3x
-      description: Up button (brightness increase) pressed 3x
-      default: []
+      description: Up button (brightness increase) pressed 2x (default: set brightness to maximum)
+      default:
+        service: light.turn_on
+        data:
+          brightness: 255
+          color_temp: 5000
       selector:
         action: null
     Up_HoldPress:
       name: Up Hold
-      description: Up button (brightness increase) held down
-      default: []
+      description: Up button (brightness increase) held down (default: increase brightness by 20% every second)
+      default:
+        service: light.turn_on
+        data:
+          brightness_step_pct: 20
+          color_temp: 5000
       selector:
         action: null
     Down_Press:
       name: Down Press
-      description: Down button (brightness decrease) pressed
-      default: []
+      description: Down button (brightness decrease) pressed (default: decrease brightness by 10%)
+      default:
+        service: light.turn_on
+        data:
+          brightness_step_pct: -10
+          color_temp: 5000
       selector:
         action: null
     Down_Press2x:
       name: Down Press 2x
-      description: Down button (brightness decrease) pressed 2x
-      default: []
-      selector:
-        action: null
-    Down_Press3x:
-      name: Down Press 3x
-      description: Down button (brightness decrease) pressed 3x
-      default: []
+      description: Down button (brightness decrease) pressed 2x (default: set brightness to minimum)
+      default:
+        service: light.turn_on
+        data:
+          brightness: 1
+          color_temp: 5000
       selector:
         action: null
     Down_HoldPress:
       name: Down Hold
-      description: Down button (brightness decrease) held down
-      default: []
+      description: Down button (brightness decrease) held down (default: decrease brightness by 20% every second, with a minimum of 1%)
+      default:
+        service: light.turn_on
+        data:
+          brightness_step_pct: -20
+          color_temp: 5000
       selector:
         action: null
     Bottom_Press:
       name: Bottom Press
-      description: Bottom button (v2 - power off button) pressed
-      default: []
+      description: Bottom button (v2 - power off button) pressed (default: set light to white and turn off)
+      default:
+        service: light.turn_on
+        data:
+          color_name: "white"
+          brightness: 1
+          color_temp: 5000
       selector:
         action: null
     Bottom_Press2x:
       name: Bottom Press 2x
-      description: Bottom button (v2 - power off button) pressed 2x
+      description: Bottom button (v2 - power off button) pressed 2x (default: perform no action)
       default: []
       selector:
         action: null
     Bottom_Press3x:
       name: Bottom Press 3x
-      description: Bottom button (v2 - power off button) pressed 3x
+      description: Bottom button (v2 - power off button) pressed 3x (default: perform no action)
       default: []
       selector:
         action: null
@@ -136,66 +153,97 @@ action:
             data:
               entity_id: "{{ light_entities }}"
               brightness_step_pct: 10
+              color_temp: 5000
       - conditions: '{{ command_type == "up_double_press" }}'
-        sequence: !input "Up_Press2x"
-      - conditions: '{{ command_type == "up_triple_press" }}'
-        sequence: !input "Up_Press3x"
-      - conditions: '{{ command_type == "up_hold" }}'
         sequence:
           - service: light.turn_on
             data:
               entity_id: "{{ light_entities }}"
-              brightness_step_pct: 20
+              brightness: 255  # Set brightness to maximum
+              color_temp: 5000
+      - conditions: '{{ command_type == "up_hold" }}'
+        sequence:
+          - repeat:
+              while:
+                - condition: state
+                  entity_id: "{{ trigger.event.data.device_id }}"
+                  state: "on"  # Ensure that the light is still on
+              sequence:
+                - service: light.turn_on
+                  data:
+                    entity_id: "{{ light_entities }}"
+                    brightness_step_pct: 20
+                    color_temp: 5000
+                - delay: "00:00:01"  # 1 second delay to avoid rapid changes
 
-      # Down Button (Button 3) - Decrease Brightness with a minimum brightness of 1%
+      # Down Button (Button 3) - Decrease Brightness
       - conditions: '{{ command_type == "down_press" }}'
         sequence:
           - choose:
               - conditions:
                   - condition: template
                     value_template: >
-                      {{ state_attr(entity, "brightness")|int > 3 }}
+                      {{ state_attr(entity, "brightness")|int > 1 }}
                 sequence:
                   - service: light.turn_on
                     data:
                       entity_id: "{{ light_entities }}"
                       brightness_step_pct: -10
+                      color_temp: 5000
       - conditions: '{{ command_type == "down_double_press" }}'
-        sequence: !input "Down_Press2x"
-      - conditions: '{{ command_type == "down_triple_press" }}'
-        sequence: !input "Down_Press3x"
+        sequence:
+          - service: light.turn_on
+            data:
+              entity_id: "{{ light_entities }}"
+              brightness: 1  # Set brightness to minimum
+              color_temp: 5000
       - conditions: '{{ command_type == "down_hold" }}'
         sequence:
-          - choose:
-              - conditions:
-                  - condition: template
-                    value_template: >
-                      {{ state_attr(entity, "brightness")|int > 3 }}
-                sequence:
-                  - service: light.turn_on
-                    data:
-                      entity_id: "{{ light_entities }}"
-                      brightness_step_pct: -20
+          - repeat:
+              while:
+                - condition: state
+                  entity_id: "{{ trigger.event.data.device_id }}"
+                  state: "on"  # Ensure that the light is still on
+              sequence:
+                - choose:
+                    - conditions:
+                        - condition: template
+                          value_template: >
+                            {{ state_attr(entity, "brightness")|int > 1 }}
+                      sequence:
+                        - service: light.turn_on
+                          data:
+                            entity_id: "{{ light_entities }}"
+                            brightness_step_pct: -20
+                            color_temp: 5000
+                - delay: "00:00:01"  # 1 second delay to avoid rapid changes
 
-      # Bottom Button (Button 4) - Turn off light
-      - conditions: '{{ command_type == "off_press" }}'
+      # Bottom Button (Button 4) - Set light to white and turn off
+      # Note: Some lights may still show as "on" even when turned off, so we first set it to white and minimal brightness before turning it off.
+      - conditions: '{{ command_type == "bottom_press" }}'
         sequence:
+          - service: light.turn_on
+            data:
+              entity_id: "{{ light_entities }}"
+              color_name: "white"
+              brightness: 1
+              color_temp: 5000
+          - delay: "00:00:01"  # Small delay to ensure the light is set to white
           - service: light.turn_off
             data:
               entity_id: "{{ light_entities }}"
-      - conditions: '{{ command_type == "off_double_press" }}'
+      - conditions: '{{ command_type == "bottom_double_press" }}'
         sequence: !input "Bottom_Press2x"
-      - conditions: '{{ command_type == "off_triple_press" }}'
+      - conditions: '{{ command_type == "bottom_triple_press" }}'
         sequence: !input "Bottom_Press3x"
-              
+
       # Top Button (Button 1) - Custom Actions
-      - conditions: '{{ command_type == "on_press" }}'
+      - conditions: '{{ command_type == "top_press" }}'
         sequence: !input "Top_Press"
-      - conditions: '{{ command_type == "on_double_press" }}'
+      - conditions: '{{ command_type == "top_double_press" }}'
         sequence: !input "Top_Press2x"
-      - conditions: '{{ command_type == "on_triple_press" }}'
+      - conditions: '{{ command_type == "top_triple_press" }}'
         sequence: !input "Top_Press3x"
-      - conditions: '{{ command_type == "on_short_release" }}'
+      - conditions: '{{ command_type == "top_short_release" }}'
         sequence: !input "Top_Release"
-      - conditions: '{{ command_type == "on_hold" }}'
-        sequence: !input "Top_HoldPress"
+      - conditions: '{{ command_type
