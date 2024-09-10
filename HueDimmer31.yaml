@@ -1,4 +1,4 @@
-# Blueprint version 30
+# Blueprint version 1.26
 blueprint:
   name: Hue v2 Dimmer for Lights
   description: "Philips Hue v2 Smart Dimmer Switch using Zigbee Home Automation"
@@ -20,7 +20,6 @@ blueprint:
           entity:
             domain: light
 
-
 mode: restart
 max_exceeded: silent
 
@@ -28,18 +27,17 @@ trigger:
   - platform: event
     event_type: zha_event
     event_data:
-      zha_device: !input "zha_device"
+      device_id: !input "zha_device"
 
 condition:
   - condition: template
-    value_template: "{{ trigger.event.data.device_id == input.zha_device.id }}"
+    value_template: "{{ trigger.event.data.device_id == zha_device.id }}"
 
 action:
   - variables:
       button: "{{ trigger.event.data.args.button }}"
       command_type: "{{ trigger.event.data.command }}"
       light_group: !input "light_group"
-
 
   - choose:
 
@@ -58,7 +56,7 @@ action:
                 sequence:
                   - service: light.turn_on
                     data:
-                      entity_id: "{{ light_group }}"
+                      target: "{{ light_group }}"
                       brightness: 255
                       color_temp: 5000
                       transition: 1
@@ -66,23 +64,23 @@ action:
               # Top Double Press
               - conditions:
                   - condition: template
-                    value_template: "{{ command_type == 'top_double_press' }}"
+                    value_template: "{{ command_type == 'double_press' }}"
                 sequence:
                   - service: light.turn_on
                     data:
-                      entity_id: "{{ light_group }}"
+                      target: "{{ light_group }}"
                       brightness: 255
 
               # Top Triple Press
               - conditions:
                   - condition: template
-                    value_template: "{{ command_type == 'top_triple_press' }}"
+                    value_template: "{{ command_type == 'triple_press' }}"
                 sequence: []  # Allow for future customization
 
               # Top Hold
               - conditions:
                   - condition: template
-                    value_template: "{{ command_type == 'top_hold' }}"
+                    value_template: "{{ command_type == 'hold' }}"
                 sequence: []
 
       ######################################################################
@@ -100,29 +98,29 @@ action:
                 sequence:
                   - service: light.turn_on
                     data:
-                      entity_id: "{{ light_group }}"
+                      target: "{{ light_group }}"
                       brightness_step: 10
 
               # Up Double Press
               - conditions:
                   - condition: template
-                    value_template: "{{ command_type == 'up_double_press' }}"
+                    value_template: "{{ command_type == 'double_press' }}"
                 sequence:
                   - service: light.turn_on
                     data:
-                      entity_id: "{{ light_group }}"
+                      target: "{{ light_group }}"
                       brightness: 255
 
               # Up Triple Press
               - conditions:
                   - condition: template
-                    value_template: "{{ command_type == 'up_triple_press' }}"
+                    value_template: "{{ command_type == 'triple_press' }}"
                 sequence: []  # Allow for future customization
 
               # Up Hold
               - conditions:
                   - condition: template
-                    value_template: "{{ command_type == 'up_hold' }}"
+                    value_template: "{{ command_type == 'hold' }}"
                 sequence:
                   - repeat:
                       while:
@@ -132,7 +130,7 @@ action:
                       sequence:
                         - service: light.turn_on
                           data:
-                            entity_id: "{{ light_group }}"
+                            target: "{{ light_group }}"
                             brightness_step: 20
 
       ######################################################################
@@ -150,33 +148,33 @@ action:
                 sequence:
                   - service: light.turn_on
                     data:
-                      entity_id: "{{ light_group }}"
+                      target: "{{ light_group }}"
                       brightness_step: -10
 
               # Down Double Press
               - conditions:
                   - condition: template
-                    value_template: "{{ command_type == 'down_double_press' }}"
+                    value_template: "{{ command_type == 'double_press' }}"
                 sequence:
                   - service: light.turn_on
                     data:
-                      entity_id: "{{ light_group }}"
+                      target: "{{ light_group }}"
                       brightness_pct: 3  # Ensure minimum brightness is 3%
 
               # Down Triple Press
               - conditions:
                   - condition: template
-                    value_template: "{{ command_type == 'down_triple_press' }}"
+                    value_template: "{{ command_type == 'triple_press' }}"
                 sequence:
                   - service: light.turn_on
                     data:
-                      entity_id: "{{ light_group }}"
+                      target: "{{ light_group }}"
                       brightness: 255
 
               # Down Hold
               - conditions:
                   - condition: template
-                    value_template: "{{ command_type == 'down_hold' }}"
+                    value_template: "{{ command_type == 'hold' }}"
                 sequence:
                   - repeat:
                       while:
@@ -186,7 +184,7 @@ action:
                       sequence:
                         - service: light.turn_on
                           data:
-                            entity_id: "{{ light_group }}"
+                            target: "{{ light_group }}"
                             brightness: >
                               {% set current_brightness = state_attr(light_group, 'brightness') %}
                               {% set new_brightness = current_brightness - 20 %}
@@ -211,36 +209,36 @@ action:
                 sequence:
                   - service: light.turn_on
                     data:
-                      entity_id: "{{ light_group }}"
+                      target: "{{ light_group }}"
                       brightness: 3  # Ensure minimum brightness is 3%
                       color_temp: 5000
                       transition: 1
                   - service: light.turn_off
                     data:
-                      entity_id: "{{ light_group }}"
+                      target: "{{ light_group }}"
 
               # Bottom Double Press
               - conditions:
                   - condition: template
-                    value_template: "{{ command_type == 'bottom_double_press' }}"
+                    value_template: "{{ command_type == 'double_press' }}"
                 sequence:
                   - service: light.turn_on
                     data:
-                      entity_id: "{{ light_group }}"
+                      target: "{{ light_group }}"
                       brightness: 3  # Minimum brightness
 
               # Bottom Triple Press
               - conditions:
                   - condition: template
-                    value_template: "{{ command_type == 'bottom_triple_press' }}"
+                    value_template: "{{ command_type == 'triple_press' }}"
                 sequence:
                   - service: light.turn_on
                     data:
-                      entity_id: "{{ light_group }}"
+                      target: "{{ light_group }}"
                       brightness: 255
 
               # Bottom Hold
               - conditions:
                   - condition: template
-                    value_template: "{{ command_type == 'bottom_hold' }}"
+                    value_template: "{{ command_type == 'hold' }}"
                 sequence: []
