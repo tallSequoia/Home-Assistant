@@ -1,4 +1,4 @@
-# Blueprint version 1.25
+# Blueprint version 1.26
 blueprint:
   domain: automation
   name: Hue v2 Dimmer for Lights
