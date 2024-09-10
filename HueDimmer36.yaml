@@ -3,6 +3,7 @@ blueprint:
   name: Hue v2 Dimmer for Lights
   description: "Philips Hue v2 Smart Dimmer Switch using Zigbee Home Automation"
   domain: automation
+
   input:
     dimmer_switch:
       name: Hue Dimmer Switch
@@ -19,8 +20,30 @@ blueprint:
         target:
           entity: {}
 
+    # Top
+
+    top_double_press:
+      name: Top Button Double Press Action
+      description: Action for double press of top button
+      selector:
+        action: {}
+
+    top_triple_press:
+      name: Top Button Triple Press Action
+      description: Action for triple press of top button
+      selector:
+        action: {}
+
+    top_hold:
+      name: Top Button Hold Action
+      description: Action for hold of top button
+      selector:
+        action: {}
+
+
 mode: restart
 max_exceeded: silent
+
 
 trigger:
   - platform: event
@@ -28,9 +51,11 @@ trigger:
     event_data:
       dimmer_switch: !input "dimmer_switch"
 
+
 condition:
   - condition: template
     value_template: "{{ trigger.event.data.device_id == input.dimmer_switch.id }}"
+
 
 action:
   - variables:
@@ -64,19 +89,19 @@ action:
               - conditions:
                   - condition: template
                     value_template: "{{ command_type == 'top_double_press' }}"
-                sequence: []
+                sequence: !input "top_double_press"
 
               # Top Triple Press
               - conditions:
                   - condition: template
                     value_template: "{{ command_type == 'top_triple_press' }}"
-                sequence: []  # Allow for future customization
+                sequence: !input "top_triple_press"
 
               # Top Hold
               - conditions:
                   - condition: template
                     value_template: "{{ command_type == 'top_hold' }}"
-                sequence: []
+                sequence: !input "top_hold"
 
       ######################################################################
       ## Up Button Logic
