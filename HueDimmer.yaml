@@ -1,241 +1,203 @@
 blueprint:
   domain: automation
-  name: Philips Hue v2 Smart Dimmer Switch and Remote
-  description: Philips Hue v2 (RWL022) Smart Dimmer Switch and Remote using Zigbee Home Automation
+  name: Philips Hue v2 Smart Dimmer Switch
+  description: "Philips Hue v2 Smart Dimmer Switch using Zigbee Home Automation"
   input:
-    zha_devices:
-      name: Philips Hue Smart Dimmer Switch and Remote
-      description: Select one or more Philips Hue v2 (RWL022) Smart Dimmer Switch and Remote devices
+    zha_device:
+      name: ZHA Device
+      description: List of available Philips Hue v2 Smart Dimmer Switch devices
       selector:
         device:
           integration: zha
           model: RWL022
           multiple: true
-    light_entities:
-      name: Lights
-      description: The light entities to control
-      selector:
-        entity:
-          domain: light
-          multiple: true
-    Top_Press:
-      name: Power on/off button Press
-      description: Power on/off button pressed (default - turn on light at full brightness and 5000K color temperature)
-      default:
-        service: light.turn_on
-        data:
-          entity_id: "{{ light_entities }}"
-          brightness: 255
-          color_temp: 5000
-      selector:
-        action: null
-    Top_Press2x:
-      name: Power on/off button Press 2x
-      description: Power on/off button pressed 2x (default - perform no action)
+    top_press_override:
+      name: Top Press Override
+      description: Script to override the default top press action (default - turn on light at full brightness and 5000K color temperature)
       default: []
       selector:
         action: null
-    Top_Press3x:
-      name: Power on/off button Press 3x
-      description: Power on/off button pressed 3x (default - perform no action)
+    brightness_up_override:
+      name: Brightness Up Override
+      description: Script to override the default brightness up action (default - increase brightness by 10%)
       default: []
       selector:
         action: null
-    Top_Release:
-      name: Power on/off button Release
-      description: Power on/off button released (default - perform no action)
+    brightness_down_override:
+      name: Brightness Down Override
+      description: Script to override the default brightness down action (default - decrease brightness by 10%)
       default: []
       selector:
         action: null
-    Top_HoldPress:
-      name: Power on/off button Hold
-      description: Power on/off button held down (default - perform no action)
+    bottom_press_override:
+      name: Bottom Press Override
+      description: Script to override the default bottom press action (default - set light to white and minimal brightness before turning off)
       default: []
       selector:
         action: null
-    Up_Press:
-      name: Brightness up button Press
-      description: Brightness up button pressed (default - increase brightness by 10%)
-      default:
-        service: light.turn_on
-        data:
-          entity_id: "{{ light_entities }}"
-          brightness_step_pct: 10
-          color_temp: 5000
-      selector:
-        action: null
-    Up_Press2x:
-      name: Brightness up button Press 2x
-      description: Brightness up button pressed 2x (default - set brightness to maximum)
-      default:
-        service: light.turn_on
-        data:
-          entity_id: "{{ light_entities }}"
-          brightness: 255
-          color_temp: 5000
-      selector:
-        action: null
-    Up_Press3x:
-      name: Brightness up button Press 3x
-      description: Brightness up button pressed 3x (default - perform no action)
-      default: []
-      selector:
-        action: null
-    Up_HoldPress:
-      name: Brightness up button Hold
-      description: Brightness up button held down (default - increase brightness by 20% every second)
-      default:
-        service: light.turn_on
-        data:
-          entity_id: "{{ light_entities }}"
-          brightness_step_pct: 20
-          color_temp: 5000
-      selector:
-        action: null
-    Down_Press:
-      name: Brightness down button Press
-      description: Brightness down button pressed (default - decrease brightness by 10%)
-      default:
-        service: light.turn_on
-        data:
-          entity_id: "{{ light_entities }}"
-          brightness_step_pct: -10
-          color_temp: 5000
-      selector:
-        action: null
-    Down_Press2x:
-      name: Brightness down button Press 2x
-      description: Brightness down button pressed 2x (default - set brightness to minimum)
-      default:
-        service: light.turn_on
-        data:
-          entity_id: "{{ light_entities }}"
-          brightness: 1
-          color_temp: 5000
-      selector:
-        action: null
-    Down_Press3x:
-      name: Brightness down button Press 3x
-      description: Brightness down button pressed 3x (default - perform no action)
-      default: []
-      selector:
-        action: null
-    Down_HoldPress:
-      name: Brightness down button Hold
-      description: Brightness down button held down (default - decrease brightness by 20% every second, with a minimum of 1%)
-      default:
-        service: light.turn_on
-        data:
-          entity_id: "{{ light_entities }}"
-          brightness_step_pct: -20
-          color_temp: 5000
-      selector:
-        action: null
-    Bottom_Press:
-      name: Power off button Press
-      description: Power off button pressed (default - set light to white and turn off)
-      default:
-        service: light.turn_on
-        data:
-          entity_id: "{{ light_entities }}"
-          color_name: "white"
-          brightness: 1
-          color_temp: 5000
-      selector:
-        action: null
-    Bottom_Press2x:
-      name: Power off button Press 2x
-      description: Power off button pressed 2x (default - perform no action)
-      default: []
-      selector:
-        action: null
-    Bottom_Press3x:
-      name: Power off button Press 3x
-      description: Power off button pressed 3x (default - perform no action)
-      default: []
-      selector:
-        action: null
-    Bottom_HoldPress:
-      name: Power off button Hold
-      description: Power off button held down (default - perform no action)
-      default: []
-      selector:
-        action: null
-mode: single
-max_exceeded: silent
-variables:
-  device_ids: !input "zha_devices"
-  light_entities: !input "light_entities"
-trigger:
-  - platform: event
-    event_type: zha_event
-condition: "{{ trigger.event.data.device_id in device_ids }}"
-action:
-  - variables:
-      button: "{{ trigger.event.data.args.button }}"
-      press_type: "{{ trigger.event.data.args.press_type }}"
-      command_type: "{{ trigger.event.data.command }}"
-  - choose:
-      # Power on/off Button (Button 1) - Default Action
-      - conditions: '{{ command_type == "top_press" }}'
-        sequence: !input "Top_Press"
-      - conditions: '{{ command_type == "top_double_press" }}'
-        sequence: !input "Top_Press2x"
-      - conditions: '{{ command_type == "top_triple_press" }}'
-        sequence: !input "Top_Press3x"
-      - conditions: '{{ command_type == "top_short_release" }}'
-        sequence: !input "Top_Release"
-      - conditions: '{{ command_type == "top_hold" }}'
-        sequence: !input "Top_HoldPress"
-
-      # Brightness Up Button (Button 2) - Increase Brightness
-      - conditions: '{{ command_type == "up_press" }}'
-        sequence: !input "Up_Press"
-      - conditions: '{{ command_type == "up_double_press" }}'
-        sequence: !input "Up_Press2x"
-      - conditions: '{{ command_type == "up_triple_press" }}'
-        sequence: !input "Up_Press3x"
-      - conditions: '{{ command_type == "up_hold" }}'
-        sequence:
-          - repeat:
-              while:
-                - condition: template
-                  value_template: "{{ is_state_attr('light', 'brightness', 'on') }}"
-              sequence:
-                - service: light.turn_on
-                  data:
-                    entity_id: "{{ light_entities }}"
-                    brightness_step_pct: 20
-                    color_temp: 5000
-                - delay: "00:00:01"  # 1 second delay for gradual increase
-
-      # Brightness Down Button (Button 3) - Decrease Brightness
-      - conditions: '{{ command_type == "down_press" }}'
-        sequence: !input "Down_Press"
-      - conditions: '{{ command_type == "down_double_press" }}'
-        sequence: !input "Down_Press2x"
-      - conditions: '{{ command_type == "down_triple_press" }}'
-        sequence: !input "Down_Press3x"
-      - conditions: '{{ command_type == "down_hold" }}'
-        sequence:
-          - repeat:
-              while:
-                - condition: template
-                  value_template: "{{ is_state_attr('light', 'brightness', 'on') }}"
-              sequence:
-                - service: light.turn_on
-                  data:
-                    entity_id: "{{ light_entities }}"
-                    brightness_step_pct: -20
-                    color_temp: 5000
-                - delay: "00:00:01"  # 1 second delay for gradual decrease
-
-      # Power off Button (Button 4) - Default Action
-      - conditions: '{{ command_type == "bottom_press" }}'
-        sequence: !input "Bottom_Press"
-      - conditions: '{{ command_type == "bottom_double_press" }}'
-        sequence: !input "Bottom_Press2x"
-      - conditions: '{{ command_type == "bottom_triple_press" }}'
-        sequence: !input "Bottom_Press3x"
-      - conditions: '{{ command_type == "bottom_hold" }}'
-        sequence: !input "Bottom_HoldPress"
+  mode: single
+  max_exceeded: silent
+  variables:
+    device_id: !input "zha_device"
+    top_press_override: !input "top_press_override"
+    brightness_up_override: !input "brightness_up_override"
+    brightness_down_override: !input "brightness_down_override"
+    bottom_press_override: !input "bottom_press_override"
+  trigger:
+    - platform: event
+      event_type: zha_event
+  condition: "{{ trigger.event.data.device_id == device_id }}"
+  action:
+    - variables:
+        button: "{{ trigger.event.data.args.button }}"
+        command_type: "{{ trigger.event.data.command }}"
+    - service: logbook.log
+      data:
+        name: Button
+        message: "{{ button }}"
+    - service: logbook.log
+      data:
+        name: Command
+        message: "{{ command_type }}"
+    - choose:
+        # Top Button (Power on/off Button)
+        - conditions: '{{ button == "top" }}'
+          sequence:
+            - choose:
+                - conditions: '{{ top_press_override }}'
+                  sequence: !input "top_press_override"
+                default:
+                  - service: light.turn_on
+                    data:
+                      entity_id: "{{ device_id }}"
+                      brightness: 255
+                      color_temp: 5000
+                      transition: 1
+        # Brightness Up Button
+        - conditions: '{{ button == "up" }}'
+          sequence:
+            - choose:
+                - conditions: '{{ brightness_up_override }}'
+                  sequence: !input "brightness_up_override"
+                default:
+                  - service: light.turn_on
+                    data:
+                      entity_id: "{{ device_id }}"
+                      brightness_step: 10
+        # Brightness Down Button
+        - conditions: '{{ button == "down" }}'
+          sequence:
+            - choose:
+                - conditions: '{{ brightness_down_override }}'
+                  sequence: !input "brightness_down_override"
+                default:
+                  - service: light.turn_on
+                    data:
+                      entity_id: "{{ device_id }}"
+                      brightness_step: -10
+        # Bottom Button (Power Off Button)
+        - conditions: '{{ button == "bottom" }}'
+          sequence:
+            - choose:
+                - conditions: '{{ bottom_press_override }}'
+                  sequence: !input "bottom_press_override"
+                default:
+                  - service: light.turn_on
+                    data:
+                      entity_id: "{{ device_id }}"
+                      brightness: 1
+                      color_temp: 5000
+                      transition: 1
+                  - service: light.turn_off
+                    data:
+                      entity_id: "{{ device_id }}"
+    - choose:
+        # Up Button Double Press
+        - conditions: '{{ command_type == "up_double_press" }}'
+          sequence:
+            - service: light.turn_on
+              data:
+                entity_id: "{{ device_id }}"
+                brightness: 255
+        # Up Button Triple Press
+        - conditions: '{{ command_type == "up_triple_press" }}'
+          sequence:
+            - service: light.turn_on
+              data:
+                entity_id: "{{ device_id }}"
+                brightness: 1
+        # Down Button Double Press
+        - conditions: '{{ command_type == "down_double_press" }}'
+          sequence:
+            - service: light.turn_on
+              data:
+                entity_id: "{{ device_id }}"
+                brightness: 1
+        # Down Button Triple Press
+        - conditions: '{{ command_type == "down_triple_press" }}'
+          sequence:
+            - service: light.turn_on
+              data:
+                entity_id: "{{ device_id }}"
+                brightness: 255
+        # Top Button Double Press
+        - conditions: '{{ command_type == "top_double_press" }}'
+          sequence:
+            - service: light.turn_on
+              data:
+                entity_id: "{{ device_id }}"
+                brightness: 255
+        # Top Button Triple Press
+        - conditions: '{{ command_type == "top_triple_press" }}'
+          sequence:
+            - service: light.turn_on
+              data:
+                entity_id: "{{ device_id }}"
+                brightness: 1
+        # Bottom Button Double Press
+        - conditions: '{{ command_type == "bottom_double_press" }}'
+          sequence:
+            - service: light.turn_on
+              data:
+                entity_id: "{{ device_id }}"
+                brightness: 1
+        # Bottom Button Triple Press
+        - conditions: '{{ command_type == "bottom_triple_press" }}'
+          sequence:
+            - service: light.turn_on
+              data:
+                entity_id: "{{ device_id }}"
+                brightness: 255
+    - choose:
+        # Up Button Hold
+        - conditions: '{{ command_type == "up_hold" }}'
+          sequence:
+            - repeat:
+                while:
+                  - condition: state
+                    entity_id: "{{ device_id }}"
+                    state: "on"
+                sequence:
+                  - service: light.turn_on
+                    data:
+                      entity_id: "{{ device_id }}"
+                      brightness_step: 20
+        # Down Button Hold
+        - conditions: '{{ command_type == "down_hold" }}'
+          sequence:
+            - repeat:
+                while:
+                  - condition: state
+                    entity_id: "{{ device_id }}"
+                    state: "on"
+                sequence:
+                  - service: light.turn_on
+                    data:
+                      entity_id: "{{ device_id }}"
+                      brightness_step: -20
+        # Top Button Hold
+        - conditions: '{{ command_type == "top_hold" }}'
+          sequence: []
+        # Bottom Button Hold
+        - conditions: '{{ command_type == "bottom_hold" }}'
+          sequence: []
