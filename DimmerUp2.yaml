@@ -1,9 +1,10 @@
 blueprint:
-  name: Philips Hue Dimmer v2 - Light Control
+  name: Philips Hue Dimmer v2 - Light Control with On/Off
   description: >
     Control a light with a Philips Hue Dimmer v2 (ZHA integration).
 
     - Short press on the "on" button will turn the light on with predefined brightness and color temperature.
+    - Short press on the "off" button will turn the light off.
   
   domain: automation
   input:
@@ -48,12 +49,28 @@ trigger:
     domain: zha
     type: remote_button_short_release
     subtype: turn_on
+  - platform: device
+    device_id: !input "dimmer_switch"
+    domain: zha
+    type: remote_button_short_release
+    subtype: turn_off
 
 action:
-  - service: light.turn_on
-    target: !input "light_target"
-    data:
-      brightness_pct: !input "brightness"
-      kelvin: !input "kelvin"
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: 'on'
+        sequence:
+          - service: light.turn_on
+            target: !input "light_target"
+            data:
+              brightness_pct: !input "brightness"
+              kelvin: !input "kelvin"
+      - conditions:
+          - condition: trigger
+            id: 'off'
+        sequence:
+          - service: light.turn_off
+            target: !input "light_target"
 
 mode: single
