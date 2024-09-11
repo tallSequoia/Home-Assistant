@@ -42,17 +42,18 @@ blueprint:
           unit_of_measurement: "K"
           mode: slider
 
-  trigger:
-    - platform: device
-      device_id: !input "dimmer_switch"
-      domain: zha
-      type: remote_button_short_release
-      subtype: turn_on
+trigger:
+  - platform: device
+    device_id: !input "dimmer_switch"
+    domain: zha
+    type: remote_button_short_release
+    subtype: turn_on
 
-  action:
-    - service: light.turn_on
-      target: !input "light_target"
-      data:
-        brightness_pct: !input "brightness"
-        kelvin: !input "kelvin"
-  mode: single
+action:
+  - service: light.turn_on
+    target: !input "light_target"
+    data:
+      brightness_pct: !input "brightness"
+      kelvin: !input "kelvin"
+
+mode: single
