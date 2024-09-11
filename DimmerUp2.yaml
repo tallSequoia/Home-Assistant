@@ -1,10 +1,11 @@
 blueprint:
-  name: Philips Hue Dimmer v2 - Light Control with On/Off
+  name: Philips Hue Dimmer v2 - Top and Bottom Button Actions
   description: >
     Control a light with a Philips Hue Dimmer v2 (ZHA integration).
 
-    - Short press on the "on" button will turn the light on with predefined brightness and color temperature.
-    - Short press on the "off" button will turn the light off.
+    - Single press on the top button will turn the light on with predefined brightness and color temperature.
+    - Double press on the top button will trigger a custom action.
+    - The bottom button will turn off all the lights.
   
   domain: automation
   input:
@@ -15,13 +16,19 @@ blueprint:
         device:
           integration: zha
           model: RWL022
-    light_target:
+    light_group:
       name: Light(s)
       description: Select the light(s) to control
       selector:
         target:
           entity:
             domain: light
+    top_double_press:
+      name: Top Double Press Action
+      description: Action to run when the top button is double-pressed
+      default: []
+      selector:
+        action: {}
     brightness:
       name: Brightness Percentage
       description: Brightness of the light(s) when turning on
@@ -44,33 +51,58 @@ blueprint:
           mode: slider
 
 trigger:
-  - platform: device
-    device_id: !input "dimmer_switch"
-    domain: zha
-    type: remote_button_short_release
-    subtype: turn_on
-  - platform: device
-    device_id: !input "dimmer_switch"
-    domain: zha
-    type: remote_button_short_release
-    subtype: turn_off
+  - platform: event
+    event_type: zha_event
+    event_data:
+      device_id: !input "dimmer_switch"
 
 action:
+  - variables:
+      button: "{{ trigger.event.data.args.button }}"
+      command_type: "{{ trigger.event.data.command }}"
+      light_group: !input "light_group"
+
   - choose:
+      ######################################################################
+      ## Top Button Logic
+      ######################################################################
       - conditions:
-          - condition: trigger
-            id: 'on'
+          - condition: template
+            value_template: "{{ button == 'top' }}"
         sequence:
-          - service: light.turn_on
-            target: !input "light_target"
-            data:
-              brightness_pct: !input "brightness"
-              kelvin: !input "kelvin"
+          - choose:
+              # Top Single Press
+              - conditions:
+                  - condition: template
+                    value_template: "{{ command_type == 'press' }}"
+                sequence:
+                  - service: light.turn_on
+                    data:
+                      entity_id: "{{ light_group }}"
+                      brightness_pct: !input "brightness"
+                      kelvin: !input "kelvin"
+                      transition: 1
+
+              # Top Double Press
+              - conditions:
+                  - condition: template
+                    value_template: "{{ command_type == 'double_press' }}"
+                sequence:
+                  - choose:
+                      - conditions: "{{ input.top_double_press != [] }}"
+                        sequence: !input "top_double_press"
+
+      ######################################################################
+      ## Bottom Button Logic
+      ######################################################################
       - conditions:
-          - condition: trigger
-            id: 'off'
+          - condition: template
+            value_template: "{{ button == 'bottom' }}"
         sequence:
           - service: light.turn_off
-            target: !input "light_target"
+            target:
+              entity_id: "{{ light_group }}"
+            data:
+              transition: 1
 
 mode: single
