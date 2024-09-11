@@ -55,6 +55,7 @@ action:
           data:
             entity_id: !input "light_entity"
             transition: 0.5
+            brightness_pct: 100
       
       - conditions: "{{ command == 'off_short_release' }}"
         sequence:
