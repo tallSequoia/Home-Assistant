@@ -2,12 +2,7 @@ blueprint:
   name: Philips Hue Dimmer v2 - Light Control
   description: >
     Control a light with a Philips Hue Dimmer v2 (ZHA integration).
-
     - Short press on the "on" button will turn the light on with predefined brightness and color temperature.
-    - Short press on the "off" button will turn the light off.
-    - Short press on the "up" button increases brightness by 10%.
-    - Short press on the "down" button decreases brightness by 10%.
-
   domain: automation
   input:
     dimmer_switch:
@@ -46,25 +41,16 @@ blueprint:
           mode: slider
 
 trigger:
-  - platform: event
-    event_type: zha_event
-    event_data:
-      device_id: !input "dimmer_switch"
+  - platform: device
+    device_id: !input "dimmer_switch"
+    domain: zha
+    type: remote_button_short_release
 
 action:
   - variables:
       command: "{{ trigger.event.data.command }}"
-      light_target: "{{ input.light_target }}"
-      brightness: "{{ input.brightness }}"
-      kelvin: "{{ input.kelvin }}"
-  - service: system_log.write
-    data:
-      message: "Button Pressed: {{ command }}"
-      level: info
+      button: "{{ trigger.event.data.args.button }}"
   - choose:
-      ######################################################################
-      ## Button Identification
-      ######################################################################
       - conditions:
           - condition: template
             value_template: "{{ command == 'on_short_release' }}"
@@ -74,14 +60,12 @@ action:
             data:
               brightness_pct: !input "brightness"
               kelvin: !input "kelvin"
-                
       - conditions:
           - condition: template
             value_template: "{{ command == 'off_short_release' }}"
         sequence:
           - service: light.turn_off
             target: !input "light_target"
-
       - conditions:
           - condition: template
             value_template: "{{ command == 'up_short_release' }}"
@@ -90,7 +74,6 @@ action:
             target: !input "light_target"
             data:
               brightness_step_pct: 10
-
       - conditions:
           - condition: template
             value_template: "{{ command == 'down_short_release' }}"
