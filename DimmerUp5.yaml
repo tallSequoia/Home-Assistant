@@ -1,3 +1,4 @@
+#INDEV
 blueprint:
   name: Philips Hue Dimmer v2 - Light Control
   description: >
@@ -26,8 +27,6 @@ trigger:
   - platform: device
     device_id: !input "dimmer_switch"
     domain: zha
-    type: remote_button_short_release
-    subtype: off_short_release
 
 action:
   - service: light.turn_off
