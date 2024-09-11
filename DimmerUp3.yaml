@@ -54,64 +54,46 @@ trigger:
 action:
   - variables:
       button: "{{ trigger.event.data.args.button }}"
-      command: "{{ trigger.event.data.command }}"
       light_target: "{{ input.light_target }}"
       brightness: "{{ input.brightness }}"
       kelvin: "{{ input.kelvin }}"
   - choose:
+      ######################################################################
+      ## Button Identification
+      ######################################################################
       - conditions:
           - condition: template
             value_template: "{{ button == 'on' }}"
         sequence:
-          - choose:
-              - conditions:
-                  - condition: template
-                    value_template: "{{ command == 'on_short_release' }}"
-                sequence:
-                  - service: light.turn_on
-                    target: !input "light_target"
-                    data:
-                      brightness_pct: !input "brightness"
-                      kelvin: !input "kelvin"
-                    
+          - service: light.turn_on
+            target: !input "light_target"
+            data:
+              brightness_pct: !input "brightness"
+              kelvin: !input "kelvin"
+                
       - conditions:
           - condition: template
             value_template: "{{ button == 'off' }}"
         sequence:
-          - choose:
-              - conditions:
-                  - condition: template
-                    value_template: "{{ command == 'on_short_release' }}"
-                sequence:
-                  - service: light.turn_off
-                    target: !input "light_target"
-                    
+          - service: light.turn_off
+            target: !input "light_target"
+
       - conditions:
           - condition: template
             value_template: "{{ button == 'up' }}"
         sequence:
-          - choose:
-              - conditions:
-                  - condition: template
-                    value_template: "{{ command == 'on_short_release' }}"
-                sequence:
-                  - service: light.turn_on
-                    target: !input "light_target"
-                    data:
-                      brightness_step_pct: 10
+          - service: light.turn_on
+            target: !input "light_target"
+            data:
+              brightness_step_pct: 10
 
       - conditions:
           - condition: template
             value_template: "{{ button == 'down' }}"
         sequence:
-          - choose:
-              - conditions:
-                  - condition: template
-                    value_template: "{{ command == 'on_short_release' }}"
-                sequence:
-                  - service: light.turn_on
-                    target: !input "light_target"
-                    data:
-                      brightness_step_pct: -10
+          - service: light.turn_on
+            target: !input "light_target"
+            data:
+              brightness_step_pct: -10
 
 mode: single
