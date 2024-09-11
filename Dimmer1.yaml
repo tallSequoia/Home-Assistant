@@ -80,3 +80,4 @@ action:
             entity_id: !input "light_entity"
             transition: 0.5
             brightness_step_pct: "{{ brightness_steps*-1 }}"
+            
