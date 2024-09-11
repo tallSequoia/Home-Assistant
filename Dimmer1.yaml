@@ -1,7 +1,7 @@
 blueprint:
   name: Philips Hue Dimmer RWL022
   description: >
-    Control a single light entity with a Philips Hue Dimmer Switch (v2).
+    Control a single light entity with a Philips Hue Dimmer Switch (v2), including temperature adjustment.
   domain: automation
   input:
     remote:
@@ -27,6 +27,16 @@ blueprint:
           min: 1
           max: 25
           unit_of_measurement: "%"
+    default_color_temp:
+      name: Default Color Temperature
+      description: The default color temperature when the light is turned on.
+      selector:
+        number:
+          min: 1000
+          max: 6500
+          unit_of_measurement: "K"
+          mode: box
+          step: 100
 
 mode: restart
 max_exceeded: silent
@@ -34,6 +44,7 @@ max_exceeded: silent
 variables:
   light_entity: !input "light_entity"
   brightness_steps: !input "brightness_steps"
+  default_color_temp: !input "default_color_temp"
 
 trigger:
   - platform: event
@@ -47,21 +58,20 @@ action:
       command: "{{ trigger.event.data.command }}"
       light_on: "{{ is_state(light_entity, 'on') }}"
   - choose:
-      
       - conditions: "{{ command == 'on_short_release' }}"
         sequence:
           service: light.toggle
           data:
             entity_id: !input "light_entity"
             transition: 0.5
-      
+
       - conditions: "{{ command == 'off_short_release' }}"
         sequence:
           service: light.turn_off
           data:
             entity_id: !input "light_entity"
             transition: 0.5
-      
+
       - conditions:
           - condition: or
             conditions:
@@ -73,7 +83,8 @@ action:
             entity_id: !input "light_entity"
             transition: 0.5
             brightness_step_pct: "{{ brightness_steps }}"
-      
+            color_temp: "{{ state_attr(light_entity, 'color_temp') | default(default_color_temp) }}"
+
       - conditions:
           - condition: or
             conditions:
@@ -85,4 +96,4 @@ action:
             entity_id: !input "light_entity"
             transition: 0.5
             brightness_step_pct: "{{ brightness_steps*-1 }}"
-            
+            color_temp: "{{ state_attr(light_entity, 'color_temp') | default(default_color_temp) }}"
