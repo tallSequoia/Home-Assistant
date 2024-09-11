@@ -5,8 +5,8 @@ blueprint:
 
     - Short press on the "on" button will turn the light on with predefined brightness and color temperature.
     - Short press on the "off" button will turn the light off.
-    - Single press on the "up" button increases brightness by 10%.
-    - Single press on the "down" button decreases brightness by 10%.
+    - Short press on the "up" button increases brightness by 10%.
+    - Short press on the "down" button decreases brightness by 10%.
 
   domain: automation
   input:
@@ -53,7 +53,7 @@ trigger:
 
 action:
   - variables:
-      button: "{{ trigger.event.data.args.button }}"
+      command: "{{ trigger.event.data.command }}"
       light_target: "{{ input.light_target }}"
       brightness: "{{ input.brightness }}"
       kelvin: "{{ input.kelvin }}"
@@ -63,7 +63,7 @@ action:
       ######################################################################
       - conditions:
           - condition: template
-            value_template: "{{ button == 'on' }}"
+            value_template: "{{ command == 'on_short_release' }}"
         sequence:
           - service: light.turn_on
             target: !input "light_target"
@@ -73,14 +73,14 @@ action:
                 
       - conditions:
           - condition: template
-            value_template: "{{ button == 'off' }}"
+            value_template: "{{ command == 'off_short_release' }}"
         sequence:
           - service: light.turn_off
             target: !input "light_target"
 
       - conditions:
           - condition: template
-            value_template: "{{ button == 'up' }}"
+            value_template: "{{ command == 'up_short_release' }}"
         sequence:
           - service: light.turn_on
             target: !input "light_target"
@@ -89,7 +89,7 @@ action:
 
       - conditions:
           - condition: template
-            value_template: "{{ button == 'down' }}"
+            value_template: "{{ command == 'down_short_release' }}"
         sequence:
           - service: light.turn_on
             target: !input "light_target"
