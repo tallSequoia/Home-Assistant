@@ -1,8 +1,10 @@
 blueprint:
-  name: Philips Hue Dimmer v2 - Light Control with Command Detection
+  name: Philips Hue Dimmer v2 - Light Control
   description: >
     Control a light with a Philips Hue Dimmer v2 (ZHA integration).
-    - Turns on the light with predefined brightness and color temperature based on button press.
+
+    - Short press on the "off" button will turn the light off.
+
   domain: automation
   input:
     dimmer_switch:
@@ -19,68 +21,18 @@ blueprint:
         target:
           entity:
             domain: light
-    brightness:
-      name: Brightness Percentage
-      description: Brightness of the light(s) when turning on
-      default: 100
-      selector:
-        number:
-          min: 0
-          max: 100
-          unit_of_measurement: "%"
-          mode: slider
-    kelvin:
-      name: Color Temperature (Kelvin)
-      description: Color temperature of the light(s) when turning on
-      default: 4500
-      selector:
-        number:
-          min: 2000
-          max: 6500
-          unit_of_measurement: "K"
-          mode: slider
 
 trigger:
-  - platform: event
-    event_type: zha_event
-    event_data:
-      device_id: !input "dimmer_switch"
+  - platform: device
+    device_id: !input "dimmer_switch"
+    domain: zha
+    type: remote_button_short_release
 
 action:
   - variables:
       command: "{{ trigger.event.data.command }}"
-
+      light_entity: !input "light_target"
   - choose:
-      - conditions:
-          - condition: template
-            value_template: "{{ command == 'on_short_release' }}"
-        sequence:
-          - service: light.turn_on
-            target: !input "light_target"
-            data:
-              brightness_pct: !input "brightness"
-              kelvin: !input "kelvin"
-
-      - conditions:
-          - condition: template
-            value_template: "{{ command == 'up_short_release' }}"
-        sequence:
-          - service: light.turn_on
-            target: !input "light_target"
-            data:
-              brightness_pct: "{{ (state_attr('light.your_light_entity', 'brightness') | int + 10) | min(100) }}"
-              kelvin: !input "kelvin"
-
-      - conditions:
-          - condition: template
-            value_template: "{{ command == 'down_short_release' }}"
-        sequence:
-          - service: light.turn_on
-            target: !input "light_target"
-            data:
-              brightness_pct: "{{ (state_attr('light.your_light_entity', 'brightness') | int - 10) | max(0) }}"
-              kelvin: !input "kelvin"
-
       - conditions:
           - condition: template
             value_template: "{{ command == 'off_short_release' }}"
