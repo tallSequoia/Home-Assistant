@@ -27,17 +27,10 @@ trigger:
     device_id: !input "dimmer_switch"
     domain: zha
     type: remote_button_short_release
+    subtype: off_short_release
 
 action:
-  - variables:
-      command: "{{ trigger.event.data.command }}"
-      light_entity: !input "light_target"
-  - choose:
-      - conditions:
-          - condition: template
-            value_template: "{{ command == 'off_short_release' }}"
-        sequence:
-          - service: light.turn_off
-            target: !input "light_target"
+  - service: light.turn_off
+    target: !input "light_target"
 
 mode: single
