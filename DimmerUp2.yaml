@@ -4,7 +4,10 @@ blueprint:
     Control a light with a Philips Hue Dimmer v2 (ZHA integration).
 
     - Short press on the "on" button will turn the light on with predefined brightness and color temperature.
-  
+    - Short press on the "off" button will turn the light off.
+    - Single press on the "up" button increases brightness by 10%.
+    - Single press on the "down" button decreases brightness by 10%.
+
   domain: automation
   input:
     dimmer_switch:
@@ -43,17 +46,72 @@ blueprint:
           mode: slider
 
 trigger:
-  - platform: device
-    device_id: !input "dimmer_switch"
-    domain: zha
-    type: remote_button_short_release
-    subtype: turn_on
+  - platform: event
+    event_type: zha_event
+    event_data:
+      device_id: !input "dimmer_switch"
 
 action:
-  - service: light.turn_on
-    target: !input "light_target"
-    data:
-      brightness_pct: !input "brightness"
-      kelvin: !input "kelvin"
+  - variables:
+      button: "{{ trigger.event.data.args.button }}"
+      command: "{{ trigger.event.data.command }}"
+      light_target: "{{ input.light_target }}"
+      brightness: "{{ input.brightness }}"
+      kelvin: "{{ input.kelvin }}"
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ button == 'on' }}"
+        sequence:
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ command == 'on_short_release' }}"
+                sequence:
+                  - service: light.turn_on
+                    target: !input "light_target"
+                    data:
+                      brightness_pct: !input "brightness"
+                      kelvin: !input "kelvin"
+                    
+      - conditions:
+          - condition: template
+            value_template: "{{ button == 'off' }}"
+        sequence:
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ command == 'on_short_release' }}"
+                sequence:
+                  - service: light.turn_off
+                    target: !input "light_target"
+                    
+      - conditions:
+          - condition: template
+            value_template: "{{ button == 'up' }}"
+        sequence:
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ command == 'on_short_release' }}"
+                sequence:
+                  - service: light.turn_on
+                    target: !input "light_target"
+                    data:
+                      brightness_step_pct: 10
+
+      - conditions:
+          - condition: template
+            value_template: "{{ button == 'down' }}"
+        sequence:
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ command == 'on_short_release' }}"
+                sequence:
+                  - service: light.turn_on
+                    target: !input "light_target"
+                    data:
+                      brightness_step_pct: -10
 
 mode: single
