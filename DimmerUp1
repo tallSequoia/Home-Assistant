@@ -1,0 +1,58 @@
+blueprint:
+  name: Philips Hue Dimmer v2 - Light Control
+  description: >
+    Control a light with a Philips Hue Dimmer v2 (ZHA integration).
+
+    - Short press on the "on" button will turn the light on with predefined brightness and color temperature.
+  
+  domain: automation
+  input:
+    dimmer_switch:
+      name: Hue Dimmer Switch
+      description: The Philips Hue v2 Smart Dimmer Switch device that will send the commands
+      selector:
+        device:
+          integration: zha
+          model: RWL022
+    light_target:
+      name: Light(s)
+      description: Select the light(s) to control
+      selector:
+        target:
+          entity:
+            domain: light
+    brightness:
+      name: Brightness Percentage
+      description: Brightness of the light(s) when turning on
+      default: 100
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+          mode: slider
+    kelvin:
+      name: Color Temperature (Kelvin)
+      description: Color temperature of the light(s) when turning on
+      default: 4500
+      selector:
+        number:
+          min: 2000
+          max: 6500
+          unit_of_measurement: "K"
+          mode: slider
+
+  trigger:
+    - platform: device
+      device_id: !input "dimmer_switch"
+      domain: zha
+      type: remote_button_short_release
+      subtype: turn_on
+
+  action:
+    - service: light.turn_on
+      target: !input "light_target"
+      data:
+        brightness_pct: !input "brightness"
+        kelvin: !input "kelvin"
+  mode: single
