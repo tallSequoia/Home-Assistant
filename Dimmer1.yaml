@@ -37,6 +37,7 @@ blueprint:
           unit_of_measurement: "K"
           mode: box
           step: 100
+      default: 4500
 
 mode: restart
 max_exceeded: silent
@@ -78,12 +79,22 @@ action:
               - "{{ command == 'up_short_release' }}"
               - "{{ command == 'up_hold' }}"
         sequence:
-          service: light.turn_on
-          data:
-            entity_id: !input "light_entity"
-            transition: 0.5
-            brightness_step_pct: "{{ brightness_steps }}"
-            color_temp: "{{ state_attr(light_entity, 'color_temp') | default(default_color_temp) }}"
+          - choose:
+              - conditions: "{{ light_on == false }}"
+                sequence:
+                  service: light.turn_on
+                  data:
+                    entity_id: !input "light_entity"
+                    transition: 0.5
+                    color_temp: "{{ default_color_temp }}"
+              - conditions: "{{ light_on == true }}"
+                sequence:
+                  service: light.turn_on
+                  data:
+                    entity_id: !input "light_entity"
+                    transition: 0.5
+                    brightness_step_pct: "{{ brightness_steps }}"
+                    color_temp: "{{ state_attr(light_entity, 'color_temp') | default(default_color_temp) }}"
 
       - conditions:
           - condition: or
