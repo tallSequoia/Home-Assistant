@@ -1,7 +1,7 @@
 blueprint:
   name: Philips Hue Dimmer RWL022
   description: >
-    Control a single light entity with a Philips Hue Dimmer Switch (v2), including temperature adjustment.
+    Control a single light entity with a Philips Hue Dimmer Switch (v2), including temperature adjustment and starting brightness.
   domain: automation
   input:
     remote:
@@ -27,6 +27,7 @@ blueprint:
           min: 1
           max: 25
           unit_of_measurement: "%"
+      default: 18
     default_color_temp:
       name: Default Color Temperature
       description: The default color temperature when the light is turned on.
@@ -35,9 +36,17 @@ blueprint:
           min: 1000
           max: 6500
           unit_of_measurement: "K"
-          mode: box
           step: 100
       default: 4500
+    starting_brightness:
+      name: Starting Brightness
+      description: The brightness level to set when the light is turned on.
+      selector:
+        number:
+          min: 1
+          max: 100
+          unit_of_measurement: "%"
+      default: 100
 
 mode: restart
 max_exceeded: silent
@@ -46,6 +55,7 @@ variables:
   light_entity: !input "light_entity"
   brightness_steps: !input "brightness_steps"
   default_color_temp: !input "default_color_temp"
+  starting_brightness: !input "starting_brightness"
 
 trigger:
   - platform: event
@@ -61,10 +71,23 @@ action:
   - choose:
       - conditions: "{{ command == 'on_short_release' }}"
         sequence:
-          service: light.toggle
-          data:
-            entity_id: !input "light_entity"
-            transition: 0.5
+          - choose:
+              - conditions: "{{ light_on == false }}"
+                sequence:
+                  service: light.turn_on
+                  data:
+                    entity_id: !input "light_entity"
+                    transition: 0.5
+                    brightness_pct: "{{ starting_brightness }}"
+                    color_temp: "{{ default_color_temp }}"
+              - conditions: "{{ light_on == true }}"
+                sequence:
+                  service: light.turn_on
+                  data:
+                    entity_id: !input "light_entity"
+                    transition: 0.5
+                    brightness_step_pct: "{{ brightness_steps }}"
+                    color_temp: "{{ state_attr(light_entity, 'color_temp') | default(default_color_temp) }}"
 
       - conditions: "{{ command == 'off_short_release' }}"
         sequence:
@@ -79,22 +102,12 @@ action:
               - "{{ command == 'up_short_release' }}"
               - "{{ command == 'up_hold' }}"
         sequence:
-          - choose:
-              - conditions: "{{ light_on == false }}"
-                sequence:
-                  service: light.turn_on
-                  data:
-                    entity_id: !input "light_entity"
-                    transition: 0.5
-                    color_temp: "{{ default_color_temp }}"
-              - conditions: "{{ light_on == true }}"
-                sequence:
-                  service: light.turn_on
-                  data:
-                    entity_id: !input "light_entity"
-                    transition: 0.5
-                    brightness_step_pct: "{{ brightness_steps }}"
-                    color_temp: "{{ state_attr(light_entity, 'color_temp') | default(default_color_temp) }}"
+          service: light.turn_on
+          data:
+            entity_id: !input "light_entity"
+            transition: 0.5
+            brightness_step_pct: "{{ brightness_steps }}"
+            color_temp: "{{ state_attr(light_entity, 'color_temp') | default(default_color_temp) }}"
 
       - conditions:
           - condition: or
