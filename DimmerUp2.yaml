@@ -1,5 +1,5 @@
 blueprint:
-  name: Philips Hue Dimmer v2 - Top and Bottom Button Actions
+  name: Hue Dimmer MegaButton
   description: >
     Control a light with a Philips Hue Dimmer v2 (ZHA integration).
 
