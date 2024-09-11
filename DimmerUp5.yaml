@@ -1,8 +1,8 @@
 blueprint:
-  name: Philips Hue Dimmer v2 - Light Control
+  name: Philips Hue Dimmer v2 - Light Control with Command Detection
   description: >
     Control a light with a Philips Hue Dimmer v2 (ZHA integration).
-    - Turns on the light with predefined brightness and color temperature.
+    - Turns on the light with predefined brightness and color temperature based on button press.
   domain: automation
   input:
     dimmer_switch:
@@ -47,10 +47,45 @@ trigger:
       device_id: !input "dimmer_switch"
 
 action:
-  - service: light.turn_on
-    target: !input "light_target"
-    data:
-      brightness_pct: !input "brightness"
-      kelvin: !input "kelvin"
+  - variables:
+      command: "{{ trigger.event.data.command }}"
+
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ command == 'on_short_release' }}"
+        sequence:
+          - service: light.turn_on
+            target: !input "light_target"
+            data:
+              brightness_pct: !input "brightness"
+              kelvin: !input "kelvin"
+
+      - conditions:
+          - condition: template
+            value_template: "{{ command == 'up_short_release' }}"
+        sequence:
+          - service: light.turn_on
+            target: !input "light_target"
+            data:
+              brightness_pct: "{{ (state_attr('light.your_light_entity', 'brightness') | int + 10) | min(100) }}"
+              kelvin: !input "kelvin"
+
+      - conditions:
+          - condition: template
+            value_template: "{{ command == 'down_short_release' }}"
+        sequence:
+          - service: light.turn_on
+            target: !input "light_target"
+            data:
+              brightness_pct: "{{ (state_attr('light.your_light_entity', 'brightness') | int - 10) | max(0) }}"
+              kelvin: !input "kelvin"
+
+      - conditions:
+          - condition: template
+            value_template: "{{ command == 'off_short_release' }}"
+        sequence:
+          - service: light.turn_off
+            target: !input "light_target"
 
 mode: single
