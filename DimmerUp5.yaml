@@ -24,9 +24,10 @@ blueprint:
             domain: light
 
 trigger:
-  - platform: device
-    device_id: !input "dimmer_switch"
-    domain: zha
+  - platform: event
+    event_type: zha_event
+    event_data:
+      dimmer_switch: !input "dimmer_switch"
 
 action:
   - service: light.turn_off
