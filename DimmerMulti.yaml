@@ -75,14 +75,14 @@ action:
                   - service: script.turn_on
                     data:
                       entity_id: "{{ custom_on_actions }}"
-            default: 
-              # Fallback to default behavior (toggle with set brightness and color_temp)
-              - service: light.toggle
-                data:
-                  entity_id: !input "light_entity"
-                  transition: 0.4
-                  brightness: 255
-                  color_temp: "{{ colour_temp }}"
+                default:
+                  # Fallback to default behavior (toggle with set brightness and color_temp)
+                  - service: light.toggle
+                    data:
+                      entity_id: !input "light_entity"
+                      transition: 0.4
+                      brightness: 255
+                      color_temp: "{{ colour_temp }}"
 
       # Handle off_short_release (off action remains the same)
       - conditions: "{{ command == 'off_short_release' }}"
