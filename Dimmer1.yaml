@@ -1,7 +1,7 @@
 blueprint:
-  name: Philips Hue Dimmer RWL022
+  name: Philips Hue Dimmer RWL022 with Custom On Actions
   description: >
-    Control a single light entity with a Philips Hue Dimmer Switch (v2).
+    Control a single light entity with a Philips Hue Dimmer Switch (v2) and define custom actions for the default light behavior.
   domain: automation
   input:
     remote:
@@ -39,7 +39,13 @@ blueprint:
           mode: box
           step: 100
       default: 4500
-      
+    custom_on_actions:
+      name: Custom Actions for Light On
+      description: Actions to perform when the light is turned on.
+      default: []
+      selector:
+        action: {}
+
 mode: restart
 max_exceeded: silent
 
@@ -47,7 +53,8 @@ variables:
   light_entity: !input "light_entity"
   brightness_steps: !input "brightness_steps"
   colour_temp: !input "colour_temp"
-  
+  custom_on_actions: !input "custom_on_actions"
+
 trigger:
   - platform: event
     event_type: zha_event
@@ -60,24 +67,36 @@ action:
       command: "{{ trigger.event.data.command }}"
 
   - choose:
-      
+
+      # Handle on_short_release (single press for custom actions)
       - conditions: "{{ command == 'on_short_release' }}"
         sequence:
-          service: light.toggle
-          data:
-            entity_id: !input "light_entity"
-            transition: 0.4
-            brightness: 255
-            color_temp: "{{ colour_temp }}"
+          - choose:
+              - conditions: "{{ custom_on_actions | length > 0 }}"
+                sequence:
+                  # Run custom actions if defined
+                  - service: script.turn_on
+                    data:
+                      variables:
+                        custom_on_actions: "{{ custom_on_actions }}"
+              default:
+                # Fallback to default behavior (toggle with set brightness and color_temp)
+                - service: light.toggle
+                  data:
+                    entity_id: !input "light_entity"
+                    transition: 0.4
+                    brightness: 255
+                    color_temp: "{{ colour_temp }}"
 
-      
+      # Handle off_short_release (off action remains the same)
       - conditions: "{{ command == 'off_short_release' }}"
         sequence:
           service: light.turn_off
           data:
             entity_id: !input "light_entity"
             transition: 0.4
-      
+
+      # Handle brightness increase with up_short_release and up_hold
       - conditions:
           - condition: or
             conditions:
@@ -89,7 +108,8 @@ action:
             entity_id: !input "light_entity"
             transition: 0.5
             brightness_step_pct: "{{ brightness_steps }}"
-      
+
+      # Handle brightness decrease with down_short_release and down_hold
       - conditions:
           - condition: or
             conditions:
@@ -101,4 +121,10 @@ action:
             entity_id: !input "light_entity"
             transition: 0.5
             brightness_step_pct: "{{ brightness_steps*-1 }}"
-            
+
+      # Handle triple-tap (example behavior for triple-tap to toggle light)
+      - conditions: "{{ command == 'on_triple_release' }}"
+        sequence:
+          - service: light.toggle
+            data:
+              entity_id: !input "light_entity"
