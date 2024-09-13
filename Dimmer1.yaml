@@ -72,7 +72,7 @@ action:
         sequence:
           - choose:
               - conditions: "{{ custom_on_actions | length > 0 }}"
-                sequence: 
+                sequence:
                   - service: script.turn_on
                     data:
                       entity_id: "{{ custom_on_actions }}"
