@@ -67,19 +67,16 @@ action:
       command: "{{ trigger.event.data.command }}"
 
   - choose:
-
       # Handle on_short_release (single press for custom actions)
       - conditions: "{{ command == 'on_short_release' }}"
         sequence:
           - choose:
               - conditions: "{{ custom_on_actions | length > 0 }}"
-                sequence:
-                  # Run custom actions if defined
+                sequence: 
                   - service: script.turn_on
                     data:
-                      variables:
-                        custom_on_actions: "{{ custom_on_actions }}"
-              default:
+                      entity_id: "{{ custom_on_actions }}"
+              default: 
                 # Fallback to default behavior (toggle with set brightness and color_temp)
                 - service: light.toggle
                   data:
