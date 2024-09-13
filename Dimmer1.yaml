@@ -76,7 +76,7 @@ action:
                   - service: script.turn_on
                     data:
                       entity_id: "{{ custom_on_actions }}"
-              default: 
+              default:
                 # Fallback to default behavior (toggle with set brightness and color_temp)
                 - service: light.toggle
                   data:
