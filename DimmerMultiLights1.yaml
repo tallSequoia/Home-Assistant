@@ -68,7 +68,7 @@ action:
             data:
               transition: 0.4
               brightness: 255
-              color_temp: "{{ color_temp }}"
+              color_temp_kelvin: "{{ color_temp }}"
       - conditions:
           - condition: template
             value_template: "{{ command == 'off_press' }}"
