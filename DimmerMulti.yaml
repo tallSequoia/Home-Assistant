@@ -82,14 +82,7 @@
                 data:
                   transition: 0.4
                   brightness: 255
-              - choose:
-                  - conditions:
-                      - "{{ state_attr(light_entity, 'supported_color_modes') | select('in', ['color_temp']) | list | length > 0 }}"
-                    sequence:
-                      - service: light.turn_on
-                        target: !input "light_entities"
-                        data:
-                          color_temp: "{{ colour_temp }}"
+                  color_temp: "{{ colour_temp }}"
 
         # Handle off_press (off action remains the same)
         - conditions: "{{ command == 'off_press' }}"
