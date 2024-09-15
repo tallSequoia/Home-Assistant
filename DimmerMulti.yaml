@@ -62,10 +62,14 @@ action:
 
   - choose:
       # Handle on_press (single press for custom actions)
-      - conditions: "{{ command == 'on_press' }}"
+      - conditions:
+          - condition: template
+            value_template: "{{ command == 'on_press' }}"
         sequence:
           - choose:
-              - conditions: "{{ custom_on_actions | length > 0 }}"
+              - conditions:
+                  - condition: template
+                    value_template: "{{ custom_on_actions | length > 0 }}"
                 sequence:
                   - service: script.turn_on
                     data:
@@ -80,35 +84,41 @@ action:
                 color: "{{ default_color }}"
 
       # Handle off_press (off action remains the same)
-      - conditions: "{{ command == 'off_press' }}"
+      - conditions:
+          - condition: template
+            value_template: "{{ command == 'off_press' }}"
         sequence:
-          service: light.turn_off
-          target: !input "light_entities"
-          data:
-            transition: 0.4
+          - service: light.turn_off
+            target: !input "light_entities"
+            data:
+              transition: 0.4
 
       # Handle brightness increase with up_press and up_hold
       - conditions:
           - condition: or
             conditions:
-              - "{{ command == 'up_press' }}"
-              - "{{ command == 'up_hold' }}"
+              - condition: template
+                value_template: "{{ command == 'up_press' }}"
+              - condition: template
+                value_template: "{{ command == 'up_hold' }}"
         sequence:
-          service: light.turn_on
-          target: !input "light_entities"
-          data:
-            transition: 0.4
-            brightness_step_pct: "{{ brightness_steps }}"
+          - service: light.turn_on
+            target: !input "light_entities"
+            data:
+              transition: 0.4
+              brightness_step_pct: "{{ brightness_steps }}"
 
       # Handle brightness decrease with down_press and down_hold
       - conditions:
           - condition: or
             conditions:
-              - "{{ command == 'down_press' }}"
-              - "{{ command == 'down_hold' }}"
+              - condition: template
+                value_template: "{{ command == 'down_press' }}"
+              - condition: template
+                value_template: "{{ command == 'down_hold' }}"
         sequence:
-          service: light.turn_on
-          target: !input "light_entities"
-          data:
-            transition: 0.4
-            brightness_step_pct: "{{ brightness_steps*-1 }}"
+          - service: light.turn_on
+            target: !input "light_entities"
+            data:
+              transition: 0.4
+              brightness_step_pct: "{{ brightness_steps * -1 }}"
