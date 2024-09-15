@@ -69,25 +69,26 @@ action:
             value_template: "{{ command == 'on_press' }}"
         sequence:
           - choose:
-              # Iterate through the actions sequence if it's not empty
-              - conditions: "{{ actions_sequence | length > 0 }}"
+              # Check if actions_sequence is defined and has elements
+              - conditions:
+                  - condition: template
+                    value_template: "{{ actions_sequence | length > 0 }}"
                 sequence:
+                  # Iterate through the actions_sequence
                   - repeat:
-                      while:
-                        - condition: template
-                          value_template: "{{ actions_sequence | length > 0 }}"
+                      count: "{{ actions_sequence | length }}"
                       sequence:
                         - service: script.turn_on
                           data:
-                            entity_id: "{{ actions_sequence.pop(0) }}"
-            default:
-              # If no actions sequence is defined, perform a default toggle
-              - service: light.toggle
-                target: !input "light_entities"
-                data:
-                  transition: 0.4
-                  brightness: 255
-                  color_temp_kelvin: "{{ color_temp }}"
+                            entity_id: "{{ actions_sequence[repeat.index] }}"
+              default:
+                # Perform default toggle if no actions_sequence is provided
+                - service: light.toggle
+                  target: !input "light_entities"
+                  data:
+                    transition: 0.4
+                    brightness: 255
+                    color_temp_kelvin: "{{ color_temp }}"
 
       # Handle off_press (off action remains the same)
       - conditions:
