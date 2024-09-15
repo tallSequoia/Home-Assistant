@@ -47,6 +47,7 @@ variables:
   light_entities: light_entities
   brightness_steps: brightness_steps
   default_color: default_color
+  custom_on_actions: custom_on_actions
 trigger:
   - platform: event
     event_type: zha_event
@@ -61,12 +62,21 @@ action:
           - condition: template
             value_template: "{{ command == 'on_press' }}"
         sequence:
-          - service: light.turn_on
-            target: light_entities
-            data:
-              transition: 0.4
-              brightness: 255
-              color: "{{ default_color }}"
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ custom_on_actions | length > 0 }}"
+                sequence:
+                  - service: script.turn_on
+                    data:
+                      entity_id: "{{ custom_on_actions }}"
+            default:
+              - service: light.turn_on
+                target: light_entities
+                data:
+                  transition: 0.4
+                  brightness: 255
+                  color: "{{ default_color }}"
       - conditions:
           - condition: template
             value_template: "{{ command == 'off_press' }}"
