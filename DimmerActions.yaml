@@ -44,7 +44,6 @@ blueprint:
         entity:
           domain: scene
           multiple: false
-          allow_empty: true
     scene_2:
       name: Scene 2 (Optional)
       description: The second scene to activate (optional).
@@ -53,7 +52,6 @@ blueprint:
         entity:
           domain: scene
           multiple: false
-          allow_empty: true
     scene_3:
       name: Scene 3 (Optional)
       description: The third scene to activate (optional).
@@ -62,7 +60,6 @@ blueprint:
         entity:
           domain: scene
           multiple: false
-          allow_empty: true
     scene_4:
       name: Scene 4 (Optional)
       description: The fourth scene to activate (optional).
@@ -71,7 +68,6 @@ blueprint:
         entity:
           domain: scene
           multiple: false
-          allow_empty: true
 
 mode: single
 max_exceeded: silent
