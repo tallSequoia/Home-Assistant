@@ -31,8 +31,9 @@ blueprint:
       name: Colour Temp
       description: The default color when the lights are turned on.
       selector:
-        color_temp: {}
-      default: "white"
+        color_temp:
+          min: 2100
+          max: 6500
     custom_on_actions:
       name: Custom Actions for Light On
       description: Actions to perform when the lights are turned on.
