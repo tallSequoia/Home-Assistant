@@ -36,25 +36,22 @@ blueprint:
           min: 2100
           max: 6500
           unit: kelvin
-    custom_on_actions:
-      name: Custom Actions for Light On
-      description: Actions to perform when the lights are turned on.
-      default: []
-      selector:
-        action: {}
+
 mode: single
 max_exceeded: silent
+
 variables:
   light_entities: !input "light_entities"
   brightness_steps: !input "brightness_steps"
   color_temp: !input "color_temp"
-  custom_on_actions: !input "custom_on_actions"
+
 trigger:
   - platform: event
     event_type: zha_event
     event_data:
       device_id: !input "remote"
       cluster_id: 64512
+      
 action:
   - variables:
       command: "{{ trigger.event.data.command }}"
