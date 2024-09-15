@@ -40,7 +40,6 @@ blueprint:
     scene_1:
       name: Scene 1
       description: The first scene to activate (optional).
-      default: ""
       selector:
         entity:
           domain: scene
@@ -48,7 +47,6 @@ blueprint:
     scene_2:
       name: Scene 2
       description: The second scene to activate (optional).
-      default: ""
       selector:
         entity:
           domain: scene
@@ -56,7 +54,6 @@ blueprint:
     scene_3:
       name: Scene 3
       description: The third scene to activate (optional).
-      default: ""
       selector:
         entity:
           domain: scene
@@ -64,7 +61,6 @@ blueprint:
     scene_4:
       name: Scene 4
       description: The fourth scene to activate (optional).
-      default: ""
       selector:
         entity:
           domain: scene
