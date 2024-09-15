@@ -1,0 +1,192 @@
+---
+blueprint:
+  name: Philips Hue Dimmer ZHA (Optional Scene Cycling)
+  description: >
+    Control lights with the Philips Hue Dimmer Switch (RWL022) using
+    ZHA. The top button cycles through scenes if defined. Includes brightness
+    control and toggle.
+  domain: automation
+  input:
+    remote:
+      name: Philips Hue Dimmer Switch v2
+      description: The Philips Hue v2 Smart Dimmer Switch device.
+      selector:
+        device:
+          integration: zha
+          model: RWL022
+    light_entities:
+      name: The light entities to control.
+      description: The light entities to be controlled by the dimmer switch.
+      selector:
+        target:
+          entity:
+            domain: light
+    brightness_steps:
+      name: Percentage to increase or decrease brightness.
+      description: The percentage to increase or decrease brightness when the button
+        is pressed.
+      selector:
+        number:
+          min: 1
+          max: 50
+          unit_of_measurement: "%"
+      default: 18
+    color_temp:
+      name: Default Colour Temperature
+      description: The default color temperature in Kelvin when the lights are turned on.
+      selector:
+        color_temp:
+          min: 2100
+          max: 6500
+          unit: kelvin
+      default: 4500
+    scene_1:
+      name: Scene 1
+      description: The first scene to activate (optional).
+      default: ""
+      selector:
+        entity:
+          domain: scene
+          multiple: false
+          allow_empty: true
+    scene_2:
+      name: Scene 2
+      description: The second scene to activate (optional).
+      default: ""
+      selector:
+        entity:
+          domain: scene
+          multiple: false
+          allow_empty: true
+    scene_3:
+      name: Scene 3
+      description: The third scene to activate (optional).
+      default: ""
+      selector:
+        entity:
+          domain: scene
+          multiple: false
+          allow_empty: true
+    scene_4:
+      name: Scene 4
+      description: The fourth scene to activate (optional).
+      default: ""
+      selector:
+        entity:
+          domain: scene
+          multiple: false
+          allow_empty: true
+mode: single
+max_exceeded: silent
+variables:
+  current_scene: "{{ states('input_number.scene_counter') | int(0) }}"
+trigger:
+  - platform: event
+    event_type: zha_event
+    event_data:
+      device_ieee: remote
+action:
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.event.data.command == 'on_short_release' }}"
+        sequence:
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ current_scene == 0 and (scene_1 != '') }}"
+                sequence:
+                  - service: scene.turn_on
+                    target:
+                      entity_id: scene_1
+                  - service: input_number.set_value
+                    data:
+                      entity_id: input_number.scene_counter
+                      value: 1
+              - conditions:
+                  - condition: template
+                    value_template: "{{ current_scene == 1 and (scene_2 != '') }}"
+                sequence:
+                  - service: scene.turn_on
+                    target:
+                      entity_id: scene_2
+                  - service: input_number.set_value
+                    data:
+                      entity_id: input_number.scene_counter
+                      value: 2
+              - conditions:
+                  - condition: template
+                    value_template: "{{ current_scene == 2 and (scene_3 != '') }}"
+                sequence:
+                  - service: scene.turn_on
+                    target:
+                      entity_id: scene_3
+                  - service: input_number.set_value
+                    data:
+                      entity_id: input_number.scene_counter
+                      value: 3
+              - conditions:
+                  - condition: template
+                    value_template: "{{ current_scene == 3 and (scene_4 != '') }}"
+                sequence:
+                  - service: scene.turn_on
+                    target:
+                      entity_id: scene_4
+                  - service: input_number.set_value
+                    data:
+                      entity_id: input_number.scene_counter
+                      value: 0
+              - conditions:
+                  - condition: template
+                    value_template: "{{ current_scene == 0 and scene_1 == '' }}"
+                sequence:
+                  - service: input_number.set_value
+                    data:
+                      entity_id: input_number.scene_counter
+                      value: 1
+              - conditions:
+                  - condition: template
+                    value_template: "{{ current_scene == 1 and scene_2 == '' }}"
+                sequence:
+                  - service: input_number.set_value
+                    data:
+                      entity_id: input_number.scene_counter
+                      value: 2
+              - conditions:
+                  - condition: template
+                    value_template: "{{ current_scene == 2 and scene_3 == '' }}"
+                sequence:
+                  - service: input_number.set_value
+                    data:
+                      entity_id: input_number.scene_counter
+                      value: 3
+              - conditions:
+                  - condition: template
+                    value_template: "{{ current_scene == 3 and scene_4 == '' }}"
+                sequence:
+                  - service: input_number.set_value
+                    data:
+                      entity_id: input_number.scene_counter
+                      value: 0
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.event.data.command == 'up_short_release' }}"
+        sequence:
+          - service: light.turn_on
+            target: light_entities
+            data:
+              brightness_step_pct: "{{ brightness_steps }}"
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.event.data.command == 'down_short_release' }}"
+        sequence:
+          - service: light.turn_on
+            target: light_entities
+            data:
+              brightness_step_pct: -{{ brightness_steps }}
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.event.data.command == 'off_short_release' }}"
+        sequence:
+          - service: light.turn_off
+            target: light_entities
