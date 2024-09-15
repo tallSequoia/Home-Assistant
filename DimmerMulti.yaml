@@ -1,20 +1,19 @@
 blueprint:
-  name: Philips Hue Dimmer RWL022 with Custom On Actions and Multiple Dimmers
+  name: Philips Hue Dimmer RWL022 with Custom On Actions
   description: >
-    Control a single light entity with multiple Philips Hue Dimmer Switches (v2) and define custom actions for the default light behavior.
+    Control a single light entity with a Philips Hue Dimmer Switch (v2) and define custom actions for the default light behaviour.
   domain: automation
   input:
-    remotes:
-      name: Philips Hue Dimmer Switches
-      description: Pick one or more RWL022 Dimmer Switches
+    remote:
+      name: Philips Hue Dimmer Switch v2
+      description: The Philips Hue v2 Smart Dimmer Switch device.
       selector:
-        target:
-          entity:
-            domain: sensor
-            device_class: battery
+        device:
+          integration: zha
+          model: RWL022
     light_entity:
       name: The light entity to control.
-      description: The light entity to be controlled by the dimmer switches.
+      description: The light entity to be controlled by the dimmer switch.
       selector:
         entity:
           domain: light
@@ -24,7 +23,7 @@ blueprint:
       selector:
         number:
           min: 1
-          max: 25
+          max: 50
           unit_of_measurement: "%"
       default: 18
     colour_temp:
@@ -37,7 +36,7 @@ blueprint:
           unit_of_measurement: "K"
           mode: box
           step: 100
-      default: 4500
+      default: 4800
     custom_on_actions:
       name: Custom Actions for Light On
       description: Actions to perform when the light is turned on.
@@ -58,7 +57,7 @@ trigger:
   - platform: event
     event_type: zha_event
     event_data:
-      device_id: !input "remotes"  # Allows triggering based on any selected dimmer switch
+      device_id: !input "remote"
       cluster_id: 64512
 
 action:
@@ -75,14 +74,21 @@ action:
                   - service: script.turn_on
                     data:
                       entity_id: "{{ custom_on_actions }}"
-                default:
-                  # Fallback to default behavior (toggle with set brightness and color_temp)
-                  - service: light.toggle
-                    data:
-                      entity_id: !input "light_entity"
-                      transition: 0.4
-                      brightness: 255
-                      color_temp: "{{ colour_temp }}"
+            default:
+              # Fallback to default behaviour (toggle with set brightness and colour_temp)
+              - service: light.toggle
+                data:
+                  entity_id: !input "light_entity"
+                  transition: 0.4
+                  brightness: 255
+              - choose:
+                  - conditions:
+                      - "{{ state_attr(light_entity, 'supported_color_modes') | select('in', ['color_temp']) | list | length > 0 }}"
+                    sequence:
+                      - service: light.turn_on
+                        data:
+                          entity_id: !input "light_entity"
+                          color_temp: "{{ colour_temp }}"
 
       # Handle off_short_release (off action remains the same)
       - conditions: "{{ command == 'off_short_release' }}"
@@ -117,10 +123,3 @@ action:
             entity_id: !input "light_entity"
             transition: 0.5
             brightness_step_pct: "{{ brightness_steps*-1 }}"
-
-      # Handle triple-tap (example behavior for triple-tap to toggle light)
-      - conditions: "{{ command == 'on_triple_release' }}"
-        sequence:
-          - service: light.toggle
-            data:
-              entity_id: !input "light_entity"
