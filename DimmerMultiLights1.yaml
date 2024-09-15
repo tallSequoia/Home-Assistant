@@ -21,8 +21,7 @@ blueprint:
             domain: light
     brightness_steps:
       name: Percentage to increase or decrease brightness.
-      description: The percentage to increase or decrease brightness when the button
-        is pressed.
+      description: The percentage to increase or decrease brightness when the button is pressed.
       selector:
         number:
           min: 1
@@ -46,15 +45,15 @@ blueprint:
 mode: restart
 max_exceeded: silent
 variables:
-  light_entities: light_entities
-  brightness_steps: brightness_steps
-  color_temp: color_temp
-  custom_on_actions: custom_on_actions
+  light_entities: !input "light_entities"
+  brightness_steps: !input "brightness_steps"
+  color_temp: !input "color_temp"
+  custom_on_actions: !input "custom_on_actions"
 trigger:
   - platform: event
     event_type: zha_event
     event_data:
-      device_id: remote
+      device_id: !input "remote"
       cluster_id: 64512
 action:
   - variables:
@@ -65,17 +64,17 @@ action:
             value_template: "{{ command == 'on_press' }}"
         sequence:
           - service: light.toggle
-            target: light_entities
+            target: !input "light_entities"
             data:
               transition: 0.4
-              color_temp: "{{ colour_temp }}"
               brightness: 255
+              color_temp: "{{ color_temp }}"
       - conditions:
           - condition: template
             value_template: "{{ command == 'off_press' }}"
         sequence:
           - service: light.turn_off
-            target: light_entities
+            target: !input "light_entities"
             data:
               transition: 0.4
       - conditions:
@@ -87,7 +86,7 @@ action:
                 value_template: "{{ command == 'up_hold' }}"
         sequence:
           - service: light.turn_on
-            target: light_entities
+            target: !input "light_entities"
             data:
               transition: 0.5
               brightness_step_pct: "{{ brightness_steps }}"
@@ -100,7 +99,7 @@ action:
                 value_template: "{{ command == 'down_hold' }}"
         sequence:
           - service: light.turn_on
-            target: light_entities
+            target: !input "light_entities"
             data:
               transition: 0.5
               brightness_step_pct: "{{ brightness_steps * -1 }}"
