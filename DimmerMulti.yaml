@@ -1,5 +1,5 @@
 blueprint:
-  name: Philips Hue Dimmer RWL022 with Custom On Actions
+  name: Philips Hue Dimmer RWL022 - multi
   description: >
     Control multiple light entities with a Philips Hue Dimmer Switch (v2) and define custom actions for the default light behaviour.
   domain: automation
@@ -97,7 +97,7 @@ action:
           service: light.turn_on
           target: !input "light_entities"
           data:
-            transition: 0.5
+            transition: 0.4
             brightness_step_pct: "{{ brightness_steps }}"
 
       # Handle brightness decrease with down_press and down_hold
@@ -110,5 +110,5 @@ action:
           service: light.turn_on
           target: !input "light_entities"
           data:
-            transition: 0.5
+            transition: 0.4
             brightness_step_pct: "{{ brightness_steps*-1 }}"
