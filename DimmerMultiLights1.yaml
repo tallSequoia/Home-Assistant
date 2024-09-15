@@ -100,4 +100,3 @@ action:
             data:
               transition: 0.5
               brightness_step_pct: "{{ brightness_steps * -1 }}"
-
