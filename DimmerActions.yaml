@@ -47,27 +47,27 @@ blueprint:
     scene_2:
       name: Scene 2 (Optional)
       description: The second scene to activate (optional).
-      default: {}
       selector:
         entity:
           domain: scene
           multiple: false
+      default: null
     scene_3:
       name: Scene 3 (Optional)
       description: The third scene to activate (optional).
-      default: {}
       selector:
         entity:
           domain: scene
           multiple: false
+      default: null
     scene_4:
       name: Scene 4 (Optional)
       description: The fourth scene to activate (optional).
-      default: {}
       selector:
         entity:
           domain: scene
           multiple: false
+      default: null
 
 mode: single
 max_exceeded: silent
@@ -91,7 +91,7 @@ action:
               # Cycle through only scenes that are defined.
               - conditions:
                   - condition: template
-                    value_template: "{{ current_scene == 0 and (scene_1 is defined and scene_1 != '') }}"
+                    value_template: "{{ current_scene == 0 and scene_1 is defined and scene_1 != none }}"
                 sequence:
                   - service: scene.turn_on
                     target:
@@ -102,7 +102,7 @@ action:
                       value: 1
               - conditions:
                   - condition: template
-                    value_template: "{{ current_scene == 1 and (scene_2 is defined and scene_2 != '') }}"
+                    value_template: "{{ current_scene == 1 and scene_2 is defined and scene_2 != none }}"
                 sequence:
                   - service: scene.turn_on
                     target:
@@ -113,7 +113,7 @@ action:
                       value: 2
               - conditions:
                   - condition: template
-                    value_template: "{{ current_scene == 2 and (scene_3 is defined and scene_3 != '') }}"
+                    value_template: "{{ current_scene == 2 and scene_3 is defined and scene_3 != none }}"
                 sequence:
                   - service: scene.turn_on
                     target:
@@ -124,7 +124,7 @@ action:
                       value: 3
               - conditions:
                   - condition: template
-                    value_template: "{{ current_scene == 3 and (scene_4 is defined and scene_4 != '') }}"
+                    value_template: "{{ current_scene == 3 and scene_4 is defined and scene_4 != none }}"
                 sequence:
                   - service: scene.turn_on
                     target:
@@ -136,7 +136,11 @@ action:
               # Fallback to reset to Scene 1 if no scenes are defined
               - conditions:
                   - condition: template
-                    value_template: "{{ scene_1 == '' and scene_2 == '' and scene_3 == '' and scene_4 == '' }}"
+                    value_template: >
+                      {{ (scene_1 == none or scene_1 == '') and 
+                         (scene_2 == none or scene_2 == '') and 
+                         (scene_3 == none or scene_3 == '') and 
+                         (scene_4 == none or scene_4 == '') }}
                 sequence:
                   - service: input_number.set_value
                     data:
