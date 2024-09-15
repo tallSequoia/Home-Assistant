@@ -1,8 +1,8 @@
 blueprint:
-  name: Philips Hue Dimmer RWL022 with Custom On Actions
+  name: Philips Hue Dimmer RWL022
   description: >
     Control multiple light entities with a Philips Hue Dimmer Switch
-    (v2) and define custom actions for the default light behaviour.
+    (v2), with multiple light(s) selected for a single dimmer
   domain: automation
   input:
     remote:
@@ -42,7 +42,7 @@ blueprint:
       default: []
       selector:
         action: {}
-mode: restart
+mode: single
 max_exceeded: silent
 variables:
   light_entities: !input "light_entities"
@@ -103,3 +103,4 @@ action:
             data:
               transition: 0.5
               brightness_step_pct: "{{ brightness_steps * -1 }}"
+
