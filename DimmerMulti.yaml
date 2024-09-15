@@ -1,84 +1,85 @@
-blueprint:
-  name: Philips Hue Dimmer RWL022 with Custom On Actions
-  description: >
-    Control a single light entity with a Philips Hue Dimmer Switch (v2) and define custom actions for the default light behaviour.
-  domain: automation
-  input:
-    remote:
-      name: Philips Hue Dimmer Switch v2
-      description: The Philips Hue v2 Smart Dimmer Switch device.
-      selector:
-        device:
-          integration: zha
-          model: RWL022
-    light_entity:
-      name: The light entity to control.
-      description: The light entity to be controlled by the dimmer switch.
-      selector:
-        entity:
-          domain: light
-    brightness_steps:
-      name: Percentage to increase or decrease brightness.
-      description: The percentage to increase or decrease brightness when the button is pressed.
-      selector:
-        number:
-          min: 1
-          max: 50
-          unit_of_measurement: "%"
-      default: 18
-    colour_temp:
-      name: Default Colour Temperature
-      description: The default colour temperature when the light is turned on.
-      selector:
-        number:
-          min: 2250
-          max: 6500
-          unit_of_measurement: "K"
-          mode: box
-          step: 100
-      default: 4800
-    custom_on_actions:
-      name: Custom Actions for Light On
-      description: Actions to perform when the light is turned on.
-      default: []
-      selector:
-        action: {}
+  blueprint:
+    name: Philips Hue Dimmer RWL022 with Custom On Actions
+    description: >
+      Control multiple light entities with a Philips Hue Dimmer Switch (v2) and define custom actions for the default light behaviour.
+    domain: automation
+    input:
+      remote:
+        name: Philips Hue Dimmer Switch v2
+        description: The Philips Hue v2 Smart Dimmer Switch device.
+        selector:
+          device:
+            integration: zha
+            model: RWL022
+      light_entities:
+        name: The light entities to control.
+        description: The light entities to be controlled by the dimmer switch.
+        selector:
+          target:
+            entity:
+              domain: light
+      brightness_steps:
+        name: Percentage to increase or decrease brightness.
+        description: The percentage to increase or decrease brightness when the button is pressed.
+        selector:
+          number:
+            min: 1
+            max: 50
+            unit_of_measurement: "%"
+        default: 18
+      colour_temp:
+        name: Default Colour Temperature
+        description: The default colour temperature when the lights are turned on.
+        selector:
+          number:
+            min: 2250
+            max: 6500
+            unit_of_measurement: "K"
+            mode: box
+            step: 100
+        default: 4500
+      custom_on_actions:
+        name: Custom Actions for Light On
+        description: Actions to perform when the lights are turned on.
+        default: []
+        selector:
+          action: {}
 
-mode: restart
-max_exceeded: silent
+  mode: restart
+  max_exceeded: silent
 
-variables:
-  light_entity: !input "light_entity"
-  brightness_steps: !input "brightness_steps"
-  colour_temp: !input "colour_temp"
-  custom_on_actions: !input "custom_on_actions"
+  variables:
+    light_entities: !input "light_entities"
+    brightness_steps: !input "brightness_steps"
+    colour_temp: !input "colour_temp"
+    custom_on_actions: !input "custom_on_actions"
 
-trigger:
-  - platform: event
-    event_type: zha_event
-    event_data:
-      device_id: !input "remote"
-      cluster_id: 64512
+  trigger:
+    - platform: event
+      event_type: zha_event
+      event_data:
+        device_id: !input "remote"
+        cluster_id: 64512
 
-action:
-  - variables:
-      command: "{{ trigger.event.data.command }}"
+  action:
+    - variables:
+        command: "{{ trigger.event.data.command }}"
 
-  - choose:
-      # Handle on_short_release (single press for custom actions)
-      - conditions: "{{ command == 'on_short_release' }}"
-        sequence:
-          - choose:
-              - conditions: "{{ custom_on_actions | length > 0 }}"
-                sequence:
-                  - service: script.turn_on
-                    data:
-                      entity_id: "{{ custom_on_actions }}"
-            default:
+    - choose:
+        # Handle on_press (single press for custom actions)
+        - conditions: "{{ command == 'on_press' }}"
+          sequence:
+            - choose:
+                - conditions: "{{ custom_on_actions | length > 0 }}"
+                  sequence:
+                    - service: script.turn_on
+                      data:
+                        entity_id: "{{ custom_on_actions }}"
+              default:
               # Fallback to default behaviour (toggle with set brightness and colour_temp)
               - service: light.toggle
+                target: !input "light_entities"
                 data:
-                  entity_id: !input "light_entity"
                   transition: 0.4
                   brightness: 255
               - choose:
@@ -86,40 +87,40 @@ action:
                       - "{{ state_attr(light_entity, 'supported_color_modes') | select('in', ['color_temp']) | list | length > 0 }}"
                     sequence:
                       - service: light.turn_on
+                        target: !input "light_entities"
                         data:
-                          entity_id: !input "light_entity"
                           color_temp: "{{ colour_temp }}"
 
-      # Handle off_short_release (off action remains the same)
-      - conditions: "{{ command == 'off_short_release' }}"
-        sequence:
-          service: light.turn_off
-          data:
-            entity_id: !input "light_entity"
-            transition: 0.4
+        # Handle off_press (off action remains the same)
+        - conditions: "{{ command == 'off_press' }}"
+          sequence:
+            service: light.turn_off
+            target: !input "light_entities"
+            data:
+              transition: 0.4
 
-      # Handle brightness increase with up_short_release and up_hold
-      - conditions:
-          - condition: or
-            conditions:
-              - "{{ command == 'up_short_release' }}"
-              - "{{ command == 'up_hold' }}"
-        sequence:
-          service: light.turn_on
-          data:
-            entity_id: !input "light_entity"
-            transition: 0.5
-            brightness_step_pct: "{{ brightness_steps }}"
+        # Handle brightness increase with up_press and up_hold
+        - conditions:
+            - condition: or
+              conditions:
+                - "{{ command == 'up_press' }}"
+                - "{{ command == 'up_hold' }}"
+          sequence:
+            service: light.turn_on
+            target: !input "light_entities"
+            data:
+              transition: 0.5
+              brightness_step_pct: "{{ brightness_steps }}"
 
-      # Handle brightness decrease with down_short_release and down_hold
-      - conditions:
-          - condition: or
-            conditions:
-              - "{{ command == 'down_short_release' }}"
-              - "{{ command == 'down_hold' }}"
-        sequence:
-          service: light.turn_on
-          data:
-            entity_id: !input "light_entity"
-            transition: 0.5
-            brightness_step_pct: "{{ brightness_steps*-1 }}"
+        # Handle brightness decrease with down_press and down_hold
+        - conditions:
+            - condition: or
+              conditions:
+                - "{{ command == 'down_press' }}"
+                - "{{ command == 'down_hold' }}"
+          sequence:
+            service: light.turn_on
+            target: !input "light_entities"
+            data:
+              transition: 0.5
+              brightness_step_pct: "{{ brightness_steps*-1 }}"
