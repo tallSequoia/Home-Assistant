@@ -27,17 +27,12 @@ blueprint:
           max: 50
           unit_of_measurement: "%"
       default: 18
-    colour_temp:
-      name: Default Colour Temperature
-      description: The default colour temperature when the lights are turned on.
+    default_color:
+      name: Default Color
+      description: The default color when the lights are turned on.
       selector:
-        number:
-          min: 2250
-          max: 6500
-          unit_of_measurement: "K"
-          mode: box
-          step: 100
-      default: 4500
+        color: {}
+      default: "white"
     custom_on_actions:
       name: Custom Actions for Light On
       description: Actions to perform when the lights are turned on.
@@ -51,7 +46,7 @@ max_exceeded: silent
 variables:
   light_entities: !input "light_entities"
   brightness_steps: !input "brightness_steps"
-  colour_temp: !input "colour_temp"
+  default_color: !input "default_color"
   custom_on_actions: !input "custom_on_actions"
 
 trigger:
@@ -76,13 +71,13 @@ action:
                     data:
                       entity_id: "{{ custom_on_actions }}"
             default:
-            # Fallback to default behaviour (toggle with set brightness and colour_temp)
-            - service: light.toggle
+            # Fallback to default behaviour (toggle with set brightness and color)
+            - service: light.turn_on
               target: !input "light_entities"
               data:
                 transition: 0.4
                 brightness: 255
-                color_temp: "{{ colour_temp }}"
+                color: "{{ default_color }}"
 
       # Handle off_press (off action remains the same)
       - conditions: "{{ command == 'off_press' }}"
