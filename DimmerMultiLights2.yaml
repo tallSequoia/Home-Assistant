@@ -1,8 +1,8 @@
 #-- Creation: 22 Sep 2024
-#-- Version: 2.10 ALPHA
+#-- Version: 2.12 ALPHA
 
 blueprint:
-  name: Hue Dimmer v2 (v2.10 ALPHA)
+  name: Hue Dimmer v2 (v2.12 ALPHA)
   description: >
     Control a light entity/group with a Philips Hue Dimmer Switch (v2).
   domain: automation
@@ -56,8 +56,13 @@ action:
       command: "{{ trigger.event.data.command }}"
       brightness_steps: !input brightness_steps
       light_entities: !input light_entities
-      first_light: "{{ expand(light_entities) | first }}"
-      
+      first_light: >
+        {% if light_entities is string %}
+          {{ light_entities }}
+        {% else %}
+          {{ expand(light_entities) | first }}
+        {% endif %}
+
   - choose:
       # Handle on_press (single press)
       - conditions: "{{ command == 'on_press' }}"
@@ -107,8 +112,8 @@ action:
       - conditions: "{{ command == 'up_double_press' }}"
         sequence:
           - variables:
-              current_color_temp: "{{ state_attr(first_light.entity_id, 'color_temp_kelvin') | int }}"
-              max_color_temp: "{{ state_attr(first_light.entity_id, 'max_mireds') | int }}"
+              current_color_temp: "{{ state_attr(first_light, 'color_temp_kelvin') | int }}"
+              max_color_temp: "{{ state_attr(first_light, 'max_mireds') | int }}"
           - service: light.turn_on
             target: !input light_entities
             data:
@@ -119,8 +124,8 @@ action:
       - conditions: "{{ command == 'down_double_press' }}"
         sequence:
           - variables:
-              current_color_temp: "{{ state_attr(first_light.entity_id, 'color_temp_kelvin') | int }}"
-              min_color_temp: "{{ state_attr(first_light.entity_id, 'min_mireds') | int }}"
+              current_color_temp: "{{ state_attr(first_light, 'color_temp_kelvin') | int }}"
+              min_color_temp: "{{ state_attr(first_light, 'min_mireds') | int }}"
           - service: light.turn_on
             target: !input light_entities
             data:
