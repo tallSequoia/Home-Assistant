@@ -1,8 +1,8 @@
 #-- Creation: 22 Sep 2024
-#-- Version: 2.3 ALPHA
+#-- Version: 2.4 ALPHA
 
 blueprint:
-  name: Hue Dimmer v2 (v2.3 ALPHA)
+  name: Hue Dimmer v2 (v2.4 ALPHA)
   description: >
     Control a light entity/group with a Philips Hue Dimmer Switch (v2).
   domain: automation
@@ -20,10 +20,10 @@ blueprint:
       name: Default Colour Temperature
       description: The default color temperature in Kelvin when the lights are turned on.
       selector:
-        color_temp:
+        number:
           min: 2100
           max: 6500
-          unit: kelvin
+          unit_of_measurement: kelvin
       default: 4500
     light_entity:
       name: The light entity to control.
@@ -41,81 +41,81 @@ blueprint:
           unit_of_measurement: "%"
       default: 18
 
-  mode: single
+mode: single
 
-  trigger:
-    - platform: event
-      event_type: zha_event
-      event_data:
-        device_id: !input "remote"
-        cluster_id: 64512
+trigger:
+  - platform: event
+    event_type: zha_event
+    event_data:
+      device_id: !input "remote"
+      cluster_id: 64512
 
-  action:
-    - variables:
-        command: "{{ trigger.event.data.command }}"
-        light_entity: !input "light_entity"
-        brightness_steps: !input "brightness_steps"
-        initial_color_temp: !input "initial_color_temp"
-        
-    - choose:
-        # Handle on_short_release (single press)
-        - conditions: "{{ command == 'on_short_release' }}"
-          sequence:
-            - service: light.toggle
-              data:
-                entity_id: !input "light_entity"
-                transition: 0.4
-                brightness: 255
-                color_temp_kelvin: "{{ initial_color_temp }}"
+action:
+  - variables:
+      command: "{{ trigger.event.data.command }}"
+      light_entity: !input "light_entity"
+      brightness_steps: !input "brightness_steps"
+      initial_color_temp: !input "initial_color_temp"
+      
+  - choose:
+      # Handle on_short_release (single press)
+      - conditions: "{{ command == 'on_short_release' }}"
+        sequence:
+          - service: light.toggle
+            data:
+              entity_id: !input "light_entity"
+              transition: 0.4
+              brightness: 255
+              color_temp_kelvin: "{{ initial_color_temp }}"
 
-        # Handle off_short_release (off action remains the same)
-        - conditions: "{{ command == 'off_short_release' }}"
-          sequence:
-            - service: light.turn_off
-              data:
-                entity_id: !input "light_entity"
-                transition: 0.4
+      # Handle off_short_release (off action remains the same)
+      - conditions: "{{ command == 'off_short_release' }}"
+        sequence:
+          - service: light.turn_off
+            data:
+              entity_id: !input "light_entity"
+              transition: 0.4
 
-        # Handle brightness increase with up_short_release and up_hold
-        - conditions:
-            - condition: or
-              conditions:
-                - "{{ command == 'up_short_release' }}"
-                - "{{ command == 'up_hold' }}"
-          sequence:
-            - service: light.turn_on
-              data:
-                entity_id: !input "light_entity"
-                transition: 0.5
-                brightness_step_pct: "{{ brightness_steps }}"
+      # Handle brightness increase with up_short_release and up_hold
+      - conditions:
+          - condition: or
+            conditions:
+              - "{{ command == 'up_short_release' }}"
+              - "{{ command == 'up_hold' }}"
+        sequence:
+          - service: light.turn_on
+            data:
+              entity_id: !input "light_entity"
+              transition: 0.5
+              brightness_step_pct: "{{ brightness_steps }}"
 
-        # Handle brightness decrease with down_short_release and down_hold
-        - conditions:
-            - condition: or
-              conditions:
-                - "{{ command == 'down_short_release' }}"
-                - "{{ command == 'down_hold' }}"
-          sequence:
-            - service: light.turn_on
-              data:
-                entity_id: !input "light_entity"
-                transition: 0.5
-                brightness_step_pct: "{{ brightness_steps*-1 }}"
+      # Handle brightness decrease with down_short_release and down_hold
+      - conditions:
+          - condition: or
+            conditions:
+              - "{{ command == 'down_short_release' }}"
+              - "{{ command == 'down_hold' }}"
+        sequence:
+          - service: light.turn_on
+            data:
+              entity_id: !input "light_entity"
+              transition: 0.5
+              brightness_step_pct: "{{ brightness_steps*-1 }}"
 
-        # Handle double-tap to set color temperature to 5500K (up_double_release)
-        - conditions: "{{ command == 'up_double_release' }}"
-          sequence:
-            - service: light.turn_on
-              data:
-                entity_id: !input "light_entity"
-                transition: 0.5
-                color_temp_kelvin: 5500
+      # Handle double-tap to set color temperature to 5500K (up_double_release)
+      - conditions: "{{ command == 'up_double_release' }}"
+        sequence:
+          - service: light.turn_on
+            data:
+              entity_id: !input "light_entity"
+              transition: 0.5
+              color_temp_kelvin: 5500
 
-        # Handle double-tap to set color temperature to 2500K (down_double_release)
-        - conditions: "{{ command == 'down_double_release' }}"
-          sequence:
-            - service: light.turn_on
-              data:
-                entity_id: !input "light_entity"
-                transition: 0.5
-                color_temp_kelvin: 2500
+      # Handle double-tap to set color temperature to 2500K (down_double_release)
+      - conditions: "{{ command == 'down_double_release' }}"
+        sequence:
+          - service: light.turn_on
+            data:
+              entity_id: !input "light_entity"
+              transition: 0.5
+              color_temp_kelvin: 2500
