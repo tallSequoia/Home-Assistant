@@ -1,8 +1,8 @@
 #-- Creation: 22 Sep 2024 
-#-- Version: 2.6 ALPHA
+#-- Version: 2.7 ALPHA
 
 blueprint:
-  name: Hue Dimmer v2 (v2.6 ALPHA)
+  name: Hue Dimmer v2 (v2.7 ALPHA)
   description: >
     Control a light entity/group with a Philips Hue Dimmer Switch (v2).
   domain: automation
@@ -24,7 +24,7 @@ blueprint:
           min: 2100
           max: 6500
           unit: kelvin
-      default: 4500
+      default: 3000
     light_entities:
       name: The light entities to control.
       description: The light entities to be controlled by the dimmer switch.
@@ -54,9 +54,7 @@ trigger:
 action:
   - variables:
       command: "{{ trigger.event.data.command }}"
-      light_entities: !input light_entities
       brightness_steps: !input brightness_steps
-      initial_color_temp: !input initial_color_temp
       
   - choose:
       # Handle on_press (single press)
