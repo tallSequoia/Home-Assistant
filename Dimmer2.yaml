@@ -2,26 +2,26 @@
 #-- Version: 1.8
 
 blueprint:
-  name: Philips Hue Dimmer RWL022 (v1.8)
+  name: Hue Dimmer v2 Control (v1.8)
   description: >
-    Control multiple light entities with a Philips Hue Dimmer Switch
-    (v2), with optional custom actions for on and double press off.
+    Control a single light entity with a Philips Hue Dimmer Switch (v2) and adjust color temperature with double clicks.
   domain: automation
   input:
     remote:
-      name: Philips Hue Dimmer Switch v2
-      description: The Philips Hue v2 Smart Dimmer Switch device.
+      name: Philips Hue Dimmer Switch
+      description: Pick a RWL022 Dimmer Switch
       selector:
         device:
           integration: zha
-          model: RWL022
-    light_entities:
-      name: The light entities to control.
-      description: The light entities to be controlled by the dimmer switch.
-      selector:
-        target:
           entity:
-            domain: light
+            domain: sensor
+            device_class: battery
+    light_entity:
+      name: The light entity to control.
+      description: The light entity to be controlled by the dimmer switch.
+      selector:
+        entity:
+          domain: light
     brightness_steps:
       name: Percentage to increase or decrease brightness.
       description: The percentage to increase or decrease brightness when the button is pressed.
@@ -31,117 +31,89 @@ blueprint:
           max: 50
           unit_of_measurement: "%"
       default: 18
-    color_temp:
-      name: Default Colour Temperature
-      description: The default color temperature in Kelvin when the lights are turned on.
-      selector:
-        color_temp:
-          min: 2100
-          max: 6500
-          unit: kelvin
-    custom_on_actions:
-      name: Custom Actions for Light On
-      description: Custom actions to override the default on action.
-      default: []
-      selector:
-        action: {}
-    custom_off_double_actions:
-      name: Custom Actions for Light Off Double Press
-      description: Custom actions to override the default off double press action.
-      default: []
-      selector:
-        action: {}
 
-mode: single
-max_exceeded: silent
+  mode: restart
+  max_exceeded: silent
 
-variables:
-  light_entities: !input "light_entities"
-  brightness_steps: !input "brightness_steps"
-  color_temp: !input "color_temp"
-  custom_on_actions: !input "custom_on_actions"
-  custom_off_double_actions: !input "custom_off_double_actions"
+  variables:
+    light_entity: !input "light_entity"
+    brightness_steps: !input "brightness_steps"
+    
+  trigger:
+    - platform: event
+      event_type: zha_event
+      event_data:
+        device_id: !input "remote"
+        cluster_id: 64512
 
-trigger:
-  - platform: event
-    event_type: zha_event
-    event_data:
-      device_id: !input "remote"
-      cluster_id: 64512
+  action:
+    - variables:
+        command: "{{ trigger.event.data.command }}"
+        min_temp: "{{ state_attr(light_entity, 'min_mireds') | default(2000) | float * 100 }} "  # Convert mireds to Kelvin
+        max_temp: "{{ state_attr(light_entity, 'max_mireds') | default(6500) | float * 100 }}"  # Convert mireds to Kelvin
+        current_color_temp: "{{ state_attr(light_entity, 'color_temp') | default(min_temp) }}"
+        temp_range: "{{ max_temp - min_temp }}"
+        increment: "{{ (temp_range / 4) | round }}"
 
-action:
-  - variables:
-      command: "{{ trigger.event.data.command }}"
-  - choose:
-      - conditions:
-          - condition: template
-            value_template: "{{ command == 'on_press' }}"
-        sequence:
-          - choose:
-              - conditions:
-                  - condition: template
-                    value_template: "{{ custom_on_actions | length > 0 }}"
-                sequence:
-                  - service: "{{ custom_on_actions[0].service }}"
-                    data: "{{ custom_on_actions[0].data }}"
-              - default:
-                  - service: light.turn_on
-                    target: !input "light_entities"
-                    data:
-                      transition: 0.4
-                      brightness: 255
-                      color_temp_kelvin: "{{ color_temp }}"
+    - choose:
+        # Handle on_short_release (single press)
+        - conditions: "{{ command == 'on_short_release' }}"
+          sequence:
+            # Default behavior (toggle with set brightness and color_temp)
+            - service: light.toggle
+              data:
+                entity_id: !input "light_entity"
+                transition: 0.4
+                brightness: 255
+                color_temp: "{{ (min_temp + temp_range / 2) | round }}"  # Set to mid-point on toggle
 
-      - conditions:
-          - condition: or
-            conditions:
-              - condition: template
-                value_template: "{{ command == 'up_press' }}"
-              - condition: template
-                value_template: "{{ command == 'up_hold' }}"
-        sequence:
-          - service: light.turn_on
-            target: !input "light_entities"
-            data:
-              transition: 0.5
-              brightness_step_pct: "{{ brightness_steps }}"
+        # Handle off_short_release (off action remains the same)
+        - conditions: "{{ command == 'off_short_release' }}"
+          sequence:
+            - service: light.turn_off
+              data:
+                entity_id: !input "light_entity"
+                transition: 0.4
 
-      - conditions:
-          - condition: or
-            conditions:
-              - condition: template
-                value_template: "{{ command == 'down_press' }}"
-              - condition: template
-                value_template: "{{ command == 'down_hold' }}"
-        sequence:
-          - service: light.turn_on
-            target: !input "light_entities"
-            data:
-              transition: 0.5
-              brightness_step_pct: "{{ brightness_steps * -1 }}"
+        # Handle brightness increase with up_short_release and up_hold
+        - conditions:
+            - condition: or
+              conditions:
+                - "{{ command == 'up_short_release' }}"
+                - "{{ command == 'up_hold' }}"
+          sequence:
+            - service: light.turn_on
+              data:
+                entity_id: !input "light_entity"
+                transition: 0.5
+                brightness_step_pct: "{{ brightness_steps }}"
 
-      - conditions:
-          - condition: template
-            value_template: "{{ command == 'off_press' }}"
-        sequence:
-          - service: light.turn_off
-            target: !input "light_entities"
-            data:
-              transition: 0.4
+        # Handle brightness decrease with down_short_release and down_hold
+        - conditions:
+            - condition: or
+              conditions:
+                - "{{ command == 'down_short_release' }}"
+                - "{{ command == 'down_hold' }}"
+          sequence:
+            - service: light.turn_on
+              data:
+                entity_id: !input "light_entity"
+                transition: 0.5
+                brightness_step_pct: "{{ brightness_steps*-1 }}"
 
-      - conditions:
-          - condition: template
-            value_template: "{{ command == 'off_double_press' }}"
-        sequence:
-          - choose:
-              - conditions:
-                  - condition: template
-                    value_template: "{{ custom_off_double_actions | length > 0 }}"
-                sequence:
-                  - service: "{{ custom_off_double_actions[0].service }}"
-                    data: "{{ custom_off_double_actions[0].data }}"
-              - default:
-                  - service: light.turn_off
-                    target: !input "light_entities"
-                    data:
-                      transition: 0.4
+        # Handle double-tap to adjust temperature
+        - conditions: "{{ command == 'up_double_release' }}"
+          sequence:
+            - service: light.turn_on
+              data:
+                entity_id: !input "light_entity"
+                transition: 0.5
+                color_temp: "{{ [max_temp, (current_color_temp + increment) | min(max_temp)] | max(min_temp) }}"
+
+        - conditions: "{{ command == 'down_double_release' }}"
+          sequence:
+            - service: light.turn_on
+              data:
+                entity_id: !input "light_entity"
+                transition: 0.5
+                color_temp: "{{ [min_temp, (current_color_temp - increment) | max(min_temp)] | min(max_temp) }}"
