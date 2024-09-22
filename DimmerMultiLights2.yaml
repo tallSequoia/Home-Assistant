@@ -25,12 +25,13 @@ blueprint:
           max: 6500
           unit: kelvin
       default: 4500
-    light_entity:
-      name: The light entity to control.
-      description: The light entity to be controlled by the dimmer switch.
+    light_entities:
+      name: The light entities to control.
+      description: The light entities to be controlled by the dimmer switch.
       selector:
-        entity:
-          domain: light
+        target:
+          entity:
+            domain: light
     brightness_steps:
       name: Percentage to increase or decrease brightness.
       description: The percentage to increase or decrease brightness when the button is pressed.
@@ -53,9 +54,9 @@ blueprint:
   action:
     - variables:
         command: "{{ trigger.event.data.command }}"
-        light_entity: !input light_entity
+#        light_entity: !input light_entity
         brightness_steps: !input brightness_steps
-        initial_color_temp: !input initial_color_temp
+#        initial_color_temp: !input initial_color_temp
         
     - choose:
         # Handle on_press (single press)
@@ -63,17 +64,17 @@ blueprint:
           sequence:
             - service: light.toggle
               data:
-                entity_id: !input light_entity
+                target: !input light_entity
                 transition: 0.4
                 brightness: 255
-                color_temp_kelvin: "{{ initial_color_temp }}"
+                color_temp_kelvin: !input initial_color_temp
 
         # Handle off_press (single press)
         - conditions: "{{ command == 'off_press' }}"
           sequence:
             - service: light.turn_off
               data:
-                entity_id: !input light_entity
+                target: !input light_entity
                 transition: 0.4
 
         # Handle brightness increase with up_press and up_hold
@@ -85,9 +86,9 @@ blueprint:
           sequence:
             - service: light.turn_on
               data:
-                entity_id: !input light_entity
+                target: !input light_entity
                 transition: 0.5
-                brightness_step_pct: "{{ brightness_steps }}"
+                brightness_step_pct: !input brightness_steps
 
         # Handle brightness decrease with down_press and down_hold
         - conditions:
@@ -98,7 +99,7 @@ blueprint:
           sequence:
             - service: light.turn_on
               data:
-                entity_id: !input light_entity
+                target: !input light_entity
                 transition: 0.5
                 brightness_step_pct: "{{ brightness_steps*-1 }}"
 
@@ -107,7 +108,7 @@ blueprint:
           sequence:
             - service: light.turn_on
               data:
-                entity_id: !input light_entity
+                target: !input light_entity
                 transition: 0.5
                 color_temp_kelvin: 5500
 
@@ -116,6 +117,6 @@ blueprint:
           sequence:
             - service: light.turn_on
               data:
-                entity_id: !input light_entity
+                target: !input light_entity
                 transition: 0.5
                 color_temp_kelvin: 2500
