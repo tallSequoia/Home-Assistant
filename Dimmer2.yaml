@@ -1,8 +1,8 @@
 #-- Creation: 22 Sep 2024
-#-- Version: 1.7
+#-- Version: 1.7.1
 
 blueprint:
-  name: Philips Hue Dimmer RWL022 (v1.7)
+  name: Philips Hue Dimmer RWL022 (v1.7.1)
   description: >
     Control multiple light entities with a Philips Hue Dimmer Switch
     (v2), with optional custom actions for on and double press off.
@@ -128,20 +128,3 @@ action:
             target: !input "light_entities"
             data:
               transition: 0.4
-      - conditions:
-          - condition: template
-            value_template: "{{ command == 'off_double_press' }}"
-        sequence:
-          - choose:
-              - conditions:
-                  - condition: template
-                    value_template: "{{ custom_off_double_actions | length > 0 }}"
-                sequence:
-                  - service: "{{ custom_off_double_actions[0].service }}"
-                    data: "{{ custom_off_double_actions[0].data }}"
-              - default:
-                  - service: light.turn_off
-                    target: !input "light_entities"
-                    data:
-                      transition: 0.4
-
