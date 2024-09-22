@@ -54,9 +54,9 @@ blueprint:
   action:
     - variables:
         command: "{{ trigger.event.data.command }}"
-#        light_entity: !input light_entity
+        light_entity: !input light_entity
         brightness_steps: !input brightness_steps
-#        initial_color_temp: !input initial_color_temp
+        initial_color_temp: !input initial_color_temp
         
     - choose:
         # Handle on_press (single press)
@@ -68,55 +68,3 @@ blueprint:
                 transition: 0.4
                 brightness: 255
                 color_temp_kelvin: !input initial_color_temp
-
-        # Handle off_press (single press)
-        - conditions: "{{ command == 'off_press' }}"
-          sequence:
-            - service: light.turn_off
-              data:
-                target: !input light_entity
-                transition: 0.4
-
-        # Handle brightness increase with up_press and up_hold
-        - conditions:
-            - condition: or
-              conditions:
-                - "{{ command == 'up_press' }}"
-                - "{{ command == 'up_hold' }}"
-          sequence:
-            - service: light.turn_on
-              data:
-                target: !input light_entity
-                transition: 0.5
-                brightness_step_pct: !input brightness_steps
-
-        # Handle brightness decrease with down_press and down_hold
-        - conditions:
-            - condition: or
-              conditions:
-                - "{{ command == 'down_press' }}"
-                - "{{ command == 'down_hold' }}"
-          sequence:
-            - service: light.turn_on
-              data:
-                target: !input light_entity
-                transition: 0.5
-                brightness_step_pct: "{{ brightness_steps*-1 }}"
-
-        # Handle double-tap to set color temperature to 5500K (up_double_press)
-        - conditions: "{{ command == 'up_double_press' }}"
-          sequence:
-            - service: light.turn_on
-              data:
-                target: !input light_entity
-                transition: 0.5
-                color_temp_kelvin: 5500
-
-        # Handle double-tap to set color temperature to 2500K (down_double_press)
-        - conditions: "{{ command == 'down_double_press' }}"
-          sequence:
-            - service: light.turn_on
-              data:
-                target: !input light_entity
-                transition: 0.5
-                color_temp_kelvin: 2500
