@@ -54,7 +54,7 @@ trigger:
 action:
   - variables:
       command: "{{ trigger.event.data.command }}"
-      light_entity: !input light_entity
+      light_entities: !input light_entities
       brightness_steps: !input brightness_steps
       initial_color_temp: !input initial_color_temp
       
@@ -64,7 +64,7 @@ action:
         sequence:
           - service: light.toggle
             data:
-              target: !input light_entity
+              target: !input light_entities
               transition: 0.4
               brightness: 255
               color_temp_kelvin: !input initial_color_temp
@@ -74,7 +74,7 @@ action:
         sequence:
           - service: light.turn_off
             data:
-              target: !input light_entity
+              target: !input light_entities
               transition: 0.4
 
       # Handle brightness increase with up_press and up_hold
@@ -86,7 +86,7 @@ action:
         sequence:
           - service: light.turn_on
             data:
-              target: !input light_entity
+              target: !input light_entities
               transition: 0.5
               brightness_step_pct: !input brightness_steps
 
@@ -99,7 +99,7 @@ action:
         sequence:
           - service: light.turn_on
             data:
-              target: !input light_entity
+              target: !input light_entities
               transition: 0.5
               brightness_step_pct: "{{ brightness_steps*-1 }}"
 
@@ -108,7 +108,7 @@ action:
         sequence:
           - service: light.turn_on
             data:
-              target: !input light_entity
+              target: !input light_entities
               transition: 0.5
               color_temp_kelvin: 5500
 
@@ -117,6 +117,6 @@ action:
         sequence:
           - service: light.turn_on
             data:
-              target: !input light_entity
+              target: !input light_entities
               transition: 0.5
               color_temp_kelvin: 2500
