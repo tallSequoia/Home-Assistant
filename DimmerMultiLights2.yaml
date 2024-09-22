@@ -1,8 +1,8 @@
 #-- Creation: 22 Sep 2024 
-#-- Version: 2.8 ALPHA
+#-- Version: 2.9 ALPHA
 
 blueprint:
-  name: Hue Dimmer v2 (v2.8 ALPHA)
+  name: Hue Dimmer v2 (v2.9 ALPHA)
   description: >
     Control a light entity/group with a Philips Hue Dimmer Switch (v2).
   domain: automation
@@ -61,8 +61,8 @@ action:
       - conditions: "{{ command == 'on_press' }}"
         sequence:
           - service: light.toggle
+            target: !input light_entities
             data:
-              entity_id: !input light_entities
               transition: 0.4
               brightness: 255
               color_temp_kelvin: !input initial_color_temp
@@ -71,8 +71,8 @@ action:
       - conditions: "{{ command == 'off_press' }}"
         sequence:
           - service: light.turn_off
+            target: !input light_entities
             data:
-              entity_id: !input light_entities
               transition: 0.4
 
       # Handle brightness increase with up_press and up_hold
@@ -83,8 +83,8 @@ action:
               - "{{ command == 'up_hold' }}"
         sequence:
           - service: light.turn_on
+            target: !input light_entities
             data:
-              entity_id: !input light_entities
               transition: 0.5
               brightness_step_pct: !input brightness_steps
 
@@ -96,8 +96,8 @@ action:
               - "{{ command == 'down_hold' }}"
         sequence:
           - service: light.turn_on
+            target: !input light_entities
             data:
-              entity_id: !input light_entities
               transition: 0.5
               brightness_step_pct: "{{ brightness_steps*-1 }}"
 
@@ -105,8 +105,8 @@ action:
       - conditions: "{{ command == 'up_double_press' }}"
         sequence:
           - service: light.turn_on
+            target: !input light_entities
             data:
-              entity_id: !input light_entities
               transition: 0.5
               color_temp_kelvin: 5500
 
@@ -114,7 +114,7 @@ action:
       - conditions: "{{ command == 'down_double_press' }}"
         sequence:
           - service: light.turn_on
+            target: !input light_entities
             data:
-              entity_id: !input light_entities
               transition: 0.5
               color_temp_kelvin: 2500
