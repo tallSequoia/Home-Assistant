@@ -1,12 +1,11 @@
 #-- Creation: 22 Sep 2024
-#-- Version: 1.5
+#-- Version: 1.7
 
 blueprint:
-  name: Philips Hue Dimmer RWL022 (v1.5)
+  name: Philips Hue Dimmer RWL022 (v1.7)
   description: >
     Control multiple light entities with a Philips Hue Dimmer Switch
-    (v2), with multiple light(s) selected for a single dimmer. Includes
-    brightness adjustment, a custom light-on action, and double press for the off button.
+    (v2), with optional custom actions for on and double press off.
   domain: automation
   input:
     remote:
@@ -23,14 +22,6 @@ blueprint:
         target:
           entity:
             domain: light
-    double_press_off_entities:
-      name: Entities to turn off with a double press.
-      description: (Optional) Specify the entities to turn off when the off button is double pressed.
-      selector:
-        target:
-          entity:
-            domain: light
-      default: []
     brightness_steps:
       name: Percentage to increase or decrease brightness.
       description: The percentage to increase or decrease brightness when the button is pressed.
@@ -48,6 +39,18 @@ blueprint:
           min: 2100
           max: 6500
           unit: kelvin
+    custom_on_actions:
+      name: Custom Actions for Light On
+      description: Custom actions to override the default on action.
+      default: []
+      selector:
+        action: {}
+    custom_off_double_actions:
+      name: Custom Actions for Light Off Double Press
+      description: Custom actions to override the default off double press action.
+      default: []
+      selector:
+        action: {}
 
 mode: single
 max_exceeded: silent
@@ -56,7 +59,8 @@ variables:
   light_entities: !input "light_entities"
   brightness_steps: !input "brightness_steps"
   color_temp: !input "color_temp"
-  double_press_off_entities: !input "double_press_off_entities"
+  custom_on_actions: !input "custom_on_actions"
+  custom_off_double_actions: !input "custom_off_double_actions"
 
 trigger:
   - platform: event
@@ -64,7 +68,7 @@ trigger:
     event_data:
       device_id: !input "remote"
       cluster_id: 64512
-
+      
 action:
   - variables:
       command: "{{ trigger.event.data.command }}"
@@ -73,16 +77,28 @@ action:
           - condition: template
             value_template: "{{ command == 'on_press' }}"
         sequence:
-          - service: light.turn_on
-            target: !input "light_entities"
-            data:
-              transition: 0.4
-              brightness: 255
-              color_temp_kelvin: "{{ color_temp }}"
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ custom_on_actions | length > 0 }}"
+                sequence:
+                  - service: "{{ custom_on_actions[0].service }}"
+                    data: "{{ custom_on_actions[0].data }}"
+              - default:
+                  - service: light.turn_on
+                    target: !input "light_entities"
+                    data:
+                      transition: 0.4
+                      brightness: 255
+                      color_temp_kelvin: "{{ color_temp }}"
 
       - conditions:
-          - condition: template
-            value_template: "{{ command == 'up_press' or command == 'up_hold' }}"
+          - condition: or
+            conditions:
+              - condition: template
+                value_template: "{{ command == 'up_press' }}"
+              - condition: template
+                value_template: "{{ command == 'up_hold' }}"
         sequence:
           - service: light.turn_on
             target: !input "light_entities"
@@ -91,8 +107,12 @@ action:
               brightness_step_pct: "{{ brightness_steps }}"
 
       - conditions:
-          - condition: template
-            value_template: "{{ command == 'down_press' or command == 'down_hold' }}"
+          - condition: or
+            conditions:
+              - condition: template
+                value_template: "{{ command == 'down_press' }}"
+              - condition: template
+                value_template: "{{ command == 'down_hold' }}"
         sequence:
           - service: light.turn_on
             target: !input "light_entities"
@@ -102,4 +122,26 @@ action:
 
       - conditions:
           - condition: template
-            value_template: "{{ command
+            value_template: "{{ command == 'off_press' }}"
+        sequence:
+          - service: light.turn_off
+            target: !input "light_entities"
+            data:
+              transition: 0.4
+      - conditions:
+          - condition: template
+            value_template: "{{ command == 'off_double_press' }}"
+        sequence:
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ custom_off_double_actions | length > 0 }}"
+                sequence:
+                  - service: "{{ custom_off_double_actions[0].service }}"
+                    data: "{{ custom_off_double_actions[0].data }}"
+              - default:
+                  - service: light.turn_off
+                    target: !input "light_entities"
+                    data:
+                      transition: 0.4
+
