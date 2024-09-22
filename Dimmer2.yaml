@@ -33,12 +33,7 @@ blueprint:
       default: 18
 
   mode: restart
-  max_exceeded: silent
 
-  variables:
-    light_entity: !input "light_entity"
-    brightness_steps: !input "brightness_steps"
-    
   trigger:
     - platform: event
       event_type: zha_event
@@ -49,8 +44,8 @@ blueprint:
   action:
     - variables:
         command: "{{ trigger.event.data.command }}"
-        min_temp: "{{ state_attr(light_entity, 'min_mireds') | default(2000) | float * 100 }} "  # Convert mireds to Kelvin
-        max_temp: "{{ state_attr(light_entity, 'max_mireds') | default(6500) | float * 100 }}"  # Convert mireds to Kelvin
+        min_temp: "{{ state_attr(light_entity, 'min_mireds') | default(2000) | float * 100 }}"
+        max_temp: "{{ state_attr(light_entity, 'max_mireds') | default(6500) | float * 100 }}"
         current_color_temp: "{{ state_attr(light_entity, 'color_temp') | default(min_temp) }}"
         temp_range: "{{ max_temp - min_temp }}"
         increment: "{{ (temp_range / 4) | round }}"
@@ -59,13 +54,12 @@ blueprint:
         # Handle on_short_release (single press)
         - conditions: "{{ command == 'on_short_release' }}"
           sequence:
-            # Default behavior (toggle with set brightness and color_temp)
             - service: light.toggle
               data:
                 entity_id: !input "light_entity"
                 transition: 0.4
                 brightness: 255
-                color_temp: "{{ (min_temp + temp_range / 2) | round }}"  # Set to mid-point on toggle
+                color_temp: "{{ (min_temp + temp_range / 2) | round }}"
 
         # Handle off_short_release (off action remains the same)
         - conditions: "{{ command == 'off_short_release' }}"
@@ -117,3 +111,5 @@ blueprint:
                 entity_id: !input "light_entity"
                 transition: 0.5
                 color_temp: "{{ [min_temp, (current_color_temp - increment) | max(min_temp)] | min(max_temp) }}"
+
+  
