@@ -1,0 +1,177 @@
+#-- Creation: 22 Sep 2024
+#-- Version: 1.3
+
+blueprint:
+  name: Philips Hue Dimmer RWL022
+  description: >
+    Control multiple light entities with a Philips Hue Dimmer Switch
+    (v2), with multiple light(s) selected for a single dimmer. Includes
+    a state machine for different lighting modes and double press for the off button.
+  domain: automation
+  input:
+    remote:
+      name: Philips Hue Dimmer Switch v2
+      description: The Philips Hue v2 Smart Dimmer Switch device.
+      selector:
+        device:
+          integration: zha
+          model: RWL022
+    light_entities:
+      name: The light entities to control.
+      description: The light entities to be controlled by the dimmer switch.
+      selector:
+        target:
+          entity:
+            domain: light
+    double_press_off_entities:
+      name: Entities to turn off with a double press.
+      description: (Optional) Specify the entities to turn off when the off button is double pressed.
+      selector:
+        target:
+          entity:
+            domain: light
+      default: []
+    brightness_steps:
+      name: Percentage to increase or decrease brightness.
+      description: The percentage to increase or decrease brightness when the button is pressed.
+      selector:
+        number:
+          min: 1
+          max: 50
+          unit_of_measurement: "%"
+      default: 18
+    color_temp:
+      name: Default Colour Temperature
+      description: The default color temperature in Kelvin when the lights are turned on.
+      selector:
+        color_temp:
+          min: 2100
+          max: 6500
+          unit: kelvin
+    input_number:
+      name: Lighting State Tracker
+      description: Input number to track the current lighting state.
+      selector:
+        entity:
+          domain: input_number
+
+mode: single
+max_exceeded: silent
+
+variables:
+  light_entities: !input "light_entities"
+  brightness_steps: !input "brightness_steps"
+  color_temp: !input "color_temp"
+  double_press_off_entities: !input "double_press_off_entities"
+  current_state: "{{ states('input_number.lighting_state') | int }}"
+
+trigger:
+  - platform: event
+    event_type: zha_event
+    event_data:
+      device_id: !input "remote"
+      cluster_id: 64512
+
+action:
+  - variables:
+      command: "{{ trigger.event.data.command }}"
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ command == 'on_press' }}"
+        sequence:
+          - choose:
+              # State 0: Full brightness and default colour temperature
+              - conditions:
+                  - condition: template
+                    value_template: "{{ current_state == 0 }}"
+                sequence:
+                  - service: light.turn_on
+                    target: !input "light_entities"
+                    data:
+                      transition: 0.4
+                      brightness: 255
+                      color_temp_kelvin: "{{ color_temp }}"
+                  - service: input_number.set_value
+                    target:
+                      entity_id: !input "input_number"
+                    data:
+                      value: 1  # Move to the next state
+              
+              # State 1: Low brightness and minimum colour temperature
+              - conditions:
+                  - condition: template
+                    value_template: "{{ current_state == 1 }}"
+                sequence:
+                  - service: light.turn_on
+                    target: !input "light_entities"
+                    data:
+                      transition: 0.4
+                      brightness: 50
+                      color_temp_kelvin: 2100
+                  - service: input_number.set_value
+                    target:
+                      entity_id: !input "input_number"
+                    data:
+                      value: 2  # Move to the next state
+              
+              # State 2: Turn lights off
+              - conditions:
+                  - condition: template
+                    value_template: "{{ current_state == 2 }}"
+                sequence:
+                  - service: light.turn_off
+                    target: !input "light_entities"
+                    data:
+                      transition: 0.4
+                  - service: input_number.set_value
+                    target:
+                      entity_id: !input "input_number"
+                    data:
+                      value: 0  # Loop back to state 0
+
+      - conditions:
+          - condition: template
+            value_template: "{{ command == 'off_press' }}"
+        sequence:
+          - service: light.turn_off
+            target: !input "light_entities"
+            data:
+              transition: 0.4
+
+      - conditions:
+          - condition: template
+            value_template: "{{ command == 'off_double_press' and double_press_off_entities | length > 0 }}"
+        sequence:
+          - service: light.turn_off
+            target: !input "double_press_off_entities"
+            data:
+              transition: 0.4
+
+      - conditions:
+          - condition: or
+            conditions:
+              - condition: template
+                value_template: "{{ command == 'up_press' }}"
+              - condition: template
+                value_template: "{{ command == 'up_hold' }}"
+        sequence:
+          - service: light.turn_on
+            target: !input "light_entities"
+            data:
+              transition: 0.5
+              brightness_step_pct: "{{ brightness_steps }}"
+
+      - conditions:
+          - condition: or
+            conditions:
+              - condition: template
+                value_template: "{{ command == 'down_press' }}"
+              - condition: template
+                value_template: "{{ command == 'down_hold' }}"
+        sequence:
+          - service: light.turn_on
+            target: !input "light_entities"
+            data:
+              transition: 0.5
+              brightness_step_pct: "{{ brightness_steps * -1 }}"
