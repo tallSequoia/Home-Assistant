@@ -62,6 +62,9 @@ action:
         {% else %}
           {{ expand(light_entities) | first }}
         {% endif %}
+      current_color_temp: "{{ state_attr(first_light, 'color_temp_kelvin') | int(default=4000) }}"
+      max_color_temp: "{{ state_attr(first_light, 'max_mireds') | int }}"
+      min_color_temp: "{{ state_attr(first_light, 'min_mireds') | int }}"
 
   - choose:
       # Handle on_press (single press)
@@ -92,7 +95,7 @@ action:
           - service: light.turn_on
             target: !input light_entities
             data:
-              transition: 0.5
+              transition: 0.2
               brightness_step_pct: !input brightness_steps
 
       # Handle brightness decrease with down_press and down_hold
@@ -105,29 +108,23 @@ action:
           - service: light.turn_on
             target: !input light_entities
             data:
-              transition: 0.5
+              transition: 0.2
               brightness_step_pct: "{{ brightness_steps*-1 }}"
 
       # Handle double-tap to increase color temperature by 1000K (up_double_press)
       - conditions: "{{ command == 'up_double_press' }}"
         sequence:
-          - variables:
-              current_color_temp: "{{ state_attr(first_light, 'color_temp_kelvin') | int(default=6000) }}"
-              max_color_temp: "{{ state_attr(first_light, 'max_mireds') | int }}"
           - service: light.turn_on
             target: !input light_entities
             data:
-              transition: 0.5
+              transition: 0.4
               color_temp_kelvin: "{{ [current_color_temp + 1000, max_color_temp] | min }}"
 
       # Handle double-tap to decrease color temperature by 1000K (down_double_press)
       - conditions: "{{ command == 'down_double_press' }}"
         sequence:
-          - variables:
-              current_color_temp: "{{ state_attr(first_light, 'color_temp_kelvin') | int(default=2500) }}"
-              min_color_temp: "{{ state_attr(first_light, 'min_mireds') | int }}"
           - service: light.turn_on
             target: !input light_entities
             data:
-              transition: 0.5
+              transition: 0.4
               color_temp_kelvin: "{{ [current_color_temp - 1000, min_color_temp] | max }}"
