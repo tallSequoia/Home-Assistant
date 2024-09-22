@@ -16,7 +16,7 @@ blueprint:
           entity:
             domain: sensor
             device_class: battery
-    color_temp:
+    initial_color_temp:
       name: Default Colour Temperature
       description: The default color temperature in Kelvin when the lights are turned on.
       selector:
@@ -55,7 +55,7 @@ blueprint:
         command: "{{ trigger.event.data.command }}"
         light_entity: !input "light_entity"
         brightness_steps: !input "brightness_steps"
-        initial_color_temp: !input "color_temp"
+        initial_color_temp: !input "initial_color_temp"
         
     - choose:
         # Handle on_short_release (single press)
@@ -102,7 +102,7 @@ blueprint:
                 transition: 0.5
                 brightness_step_pct: "{{ brightness_steps*-1 }}"
 
-     # Handle double-tap to set color temperature to 5500K (up_double_release)
+        # Handle double-tap to set color temperature to 5500K (up_double_release)
         - conditions: "{{ command == 'up_double_release' }}"
           sequence:
             - service: light.turn_on
