@@ -128,6 +128,7 @@ action:
             target: !input "light_entities"
             data:
               transition: 0.4
+
       - conditions:
           - condition: template
             value_template: "{{ command == 'off_double_press' }}"
