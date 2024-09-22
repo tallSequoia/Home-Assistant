@@ -1,3 +1,4 @@
+# The custom on actions do not work
   blueprint:
     name: Philips Hue Dimmer RWL022 with Custom On Actions
     description: >
