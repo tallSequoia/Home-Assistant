@@ -1,8 +1,8 @@
 #-- Creation: 22 Sep 2024
-#-- Version: 2.12 ALPHA
+#-- Version: 2.13 ALPHA
 
 blueprint:
-  name: Hue Dimmer v2 (v2.12 ALPHA)
+  name: Hue Dimmer v2 (v2.13 ALPHA)
   description: >
     Control a light entity/group with a Philips Hue Dimmer Switch (v2).
   domain: automation
@@ -112,7 +112,7 @@ action:
       - conditions: "{{ command == 'up_double_press' }}"
         sequence:
           - variables:
-              current_color_temp: "{{ state_attr(first_light, 'color_temp_kelvin') | int }}"
+              current_color_temp: "{{ state_attr(first_light, 'color_temp_kelvin') | int(default=6000) }}"
               max_color_temp: "{{ state_attr(first_light, 'max_mireds') | int }}"
           - service: light.turn_on
             target: !input light_entities
@@ -124,7 +124,7 @@ action:
       - conditions: "{{ command == 'down_double_press' }}"
         sequence:
           - variables:
-              current_color_temp: "{{ state_attr(first_light, 'color_temp_kelvin') | int }}"
+              current_color_temp: "{{ state_attr(first_light, 'color_temp_kelvin') | int(default=2500) }}"
               min_color_temp: "{{ state_attr(first_light, 'min_mireds') | int }}"
           - service: light.turn_on
             target: !input light_entities
