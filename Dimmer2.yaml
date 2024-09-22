@@ -1,8 +1,8 @@
 #-- Creation: 22 Sep 2024
-#-- Version: 2.1
+#-- Version: 2.2
 
 blueprint:
-  name: Hue Dimmer v2 Control (v2.1)
+  name: Hue Dimmer v2 Control (v2.2)
   description: >
     Control a single light entity with a Philips Hue Dimmer Switch (v2) and adjust color temperature with double clicks.
   domain: automation
@@ -20,10 +20,10 @@ blueprint:
       name: Default Colour Temperature
       description: The default color temperature in Kelvin when the lights are turned on.
       selector:
-        color_temp:
+        number:
           min: 2100
           max: 6500
-          unit: kelvin
+          unit_of_measurement: "K"
       default: 4500
 
     light_entity:
@@ -56,24 +56,18 @@ blueprint:
         command: "{{ trigger.event.data.command }}"
         light_entity: !input "light_entity"
         brightness_steps: !input "brightness_steps"
-        initial_color_temp: !input "color_temp"
-        
-        current_color_temp: "{{ state_attr(light_entity, 'color_temp') | default(initial_color_temp) }}"
-        min_temp: "{{ state_attr(light_entity, 'min_mireds') | default(2100) | float * 100 }}"
-        max_temp: "{{ state_attr(light_entity, 'max_mireds') | default(6500) | float * 100 }}"
-        temp_range: "{{ max_temp - min_temp }}"
-        increment: "{{ (temp_range / 4) | round }}"
+        color_temp: !input "color_temp"
 
     - choose:
         # Handle on_short_release (single press)
         - conditions: "{{ command == 'on_short_release' }}"
           sequence:
             - service: light.toggle
+              target: !input "light_entity"
               data:
-                entity_id: !input "light_entity"
                 transition: 0.4
                 brightness: 255
-                color_temp: "{{ initial_color_temp }}"
+                color_temp_kelvin: "{{ color_temp }}"
 
         # Handle off_short_release (off action remains the same)
         - conditions: "{{ command == 'off_short_release' }}"
@@ -107,7 +101,7 @@ blueprint:
               data:
                 entity_id: !input "light_entity"
                 transition: 0.5
-                brightness_step_pct: "{{ brightness_steps*-1 }}"
+                brightness_step_pct: "{{ brightness_steps * -1 }}"
 
         # Handle double-tap to increase color temperature
         - conditions: "{{ command == 'up_double_release' }}"
@@ -116,7 +110,13 @@ blueprint:
               data:
                 entity_id: !input "light_entity"
                 transition: 0.5
-                color_temp: "{{ [max_temp, (current_color_temp + increment) | min(max_temp)] | max(min_temp) }}"
+                color_temp: >
+                  {{ [state_attr(light_entity, 'min_mireds') | default(2100) | float * 100,
+                      (state_attr(light_entity, 'color_temp') | default(color_temp) | float * 100 + 
+                      ((state_attr(light_entity, 'max_mireds') | default(6500) | float * 100 -
+                      state_attr(light_entity, 'min_mireds') | default(2100) | float * 100) / 4))] 
+                  | min(state_attr(light_entity, 'max_mireds') | default(6500) | float * 100) 
+                  | max(state_attr(light_entity, 'min_mireds') | default(2100) | float * 100) }}
 
         # Handle double-tap to decrease color temperature
         - conditions: "{{ command == 'down_double_release' }}"
@@ -125,4 +125,10 @@ blueprint:
               data:
                 entity_id: !input "light_entity"
                 transition: 0.5
-                color_temp: "{{ [min_temp, (current_color_temp - increment) | max(min_temp)] | min(max_temp) }}"
+                color_temp: >
+                  {{ [state_attr(light_entity, 'min_mireds') | default(2100) | float * 100,
+                      (state_attr(light_entity, 'color_temp') | default(color_temp) | float * 100 - 
+                      ((state_attr(light_entity, 'max_mireds') | default(6500) | float * 100 -
+                      state_attr(light_entity, 'min_mireds') | default(2100) | float * 100) / 4))] 
+                  | min(state_attr(light_entity, 'max_mireds') | default(6500) | float * 100) 
+                  | max(state_attr(light_entity, 'min_mireds') | default(2100) | float * 100) }}
