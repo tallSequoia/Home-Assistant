@@ -1,8 +1,8 @@
 #-- Creation: 22 Sep 2024 
-#-- Version: 2.5 ALPHA
+#-- Version: 2.6 ALPHA
 
 blueprint:
-  name: Hue Dimmer v2 (v2.5 ALPHA)
+  name: Hue Dimmer v2 (v2.6 ALPHA)
   description: >
     Control a light entity/group with a Philips Hue Dimmer Switch (v2).
   domain: automation
