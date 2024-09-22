@@ -1,10 +1,10 @@
 #-- Creation: 22 Sep 2024
-#-- Version: 2.1
+#-- Version: 2.3 ALPHA
 
 blueprint:
-  name: Hue Dimmer v2 Control (v2.1)
+  name: Hue Dimmer v2 (v2.3 ALPHA)
   description: >
-    Control a single light entity with a Philips Hue Dimmer Switch (v2) and adjust color temperature with double clicks.
+    Control a light entity/group with a Philips Hue Dimmer Switch (v2).
   domain: automation
   input:
     remote:
@@ -25,7 +25,6 @@ blueprint:
           max: 6500
           unit: kelvin
       default: 4500
-
     light_entity:
       name: The light entity to control.
       description: The light entity to be controlled by the dimmer switch.
@@ -42,7 +41,7 @@ blueprint:
           unit_of_measurement: "%"
       default: 18
 
-  mode: restart
+  mode: single
 
   trigger:
     - platform: event
@@ -58,12 +57,6 @@ blueprint:
         brightness_steps: !input "brightness_steps"
         initial_color_temp: !input "color_temp"
         
-        current_color_temp: "{{ state_attr(light_entity, 'color_temp') | default(initial_color_temp) }}"
-        min_temp: "{{ state_attr(light_entity, 'min_mireds') | default(2100) | float * 100 }}"
-        max_temp: "{{ state_attr(light_entity, 'max_mireds') | default(6500) | float * 100 }}"
-        temp_range: "{{ max_temp - min_temp }}"
-        increment: "{{ (temp_range / 4) | round }}"
-
     - choose:
         # Handle on_short_release (single press)
         - conditions: "{{ command == 'on_short_release' }}"
@@ -73,7 +66,7 @@ blueprint:
                 entity_id: !input "light_entity"
                 transition: 0.4
                 brightness: 255
-                color_temp: "{{ initial_color_temp }}"
+                color_temp_kelvin: "{{ initial_color_temp }}"
 
         # Handle off_short_release (off action remains the same)
         - conditions: "{{ command == 'off_short_release' }}"
@@ -109,20 +102,20 @@ blueprint:
                 transition: 0.5
                 brightness_step_pct: "{{ brightness_steps*-1 }}"
 
-        # Handle double-tap to increase color temperature
+     # Handle double-tap to set color temperature to 5500K (up_double_release)
         - conditions: "{{ command == 'up_double_release' }}"
           sequence:
             - service: light.turn_on
               data:
                 entity_id: !input "light_entity"
                 transition: 0.5
-                color_temp: "{{ [max_temp, (current_color_temp + increment) | min(max_temp)] | max(min_temp) }}"
+                color_temp_kelvin: 5500
 
-        # Handle double-tap to decrease color temperature
+        # Handle double-tap to set color temperature to 2500K (down_double_release)
         - conditions: "{{ command == 'down_double_release' }}"
           sequence:
             - service: light.turn_on
               data:
                 entity_id: !input "light_entity"
                 transition: 0.5
-                color_temp: "{{ [min_temp, (current_color_temp - increment) | max(min_temp)] | min(max_temp) }}"
+                color_temp_kelvin: 2500
