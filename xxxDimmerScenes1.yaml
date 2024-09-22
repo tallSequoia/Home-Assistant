@@ -1,3 +1,5 @@
+# The cycling of scenes doesn't work
+
 blueprint:
   name: Philips Hue Dimmer ZHA (Optional Scene Cycling)
   description: >
