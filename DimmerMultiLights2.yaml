@@ -1,8 +1,8 @@
-#-- Creation: 22 Sep 2024 
-#-- Version: 2.9 ALPHA
+#-- Creation: 22 Sep 2024
+#-- Version: 2.10 ALPHA
 
 blueprint:
-  name: Hue Dimmer v2 (v2.9 ALPHA)
+  name: Hue Dimmer v2 (v2.10 ALPHA)
   description: >
     Control a light entity/group with a Philips Hue Dimmer Switch (v2).
   domain: automation
@@ -55,6 +55,8 @@ action:
   - variables:
       command: "{{ trigger.event.data.command }}"
       brightness_steps: !input brightness_steps
+      light_entities: !input light_entities
+      first_light: "{{ expand(light_entities) | first }}"
       
   - choose:
       # Handle on_press (single press)
@@ -101,20 +103,26 @@ action:
               transition: 0.5
               brightness_step_pct: "{{ brightness_steps*-1 }}"
 
-      # Handle double-tap to set color temperature to 5500K (up_double_press)
+      # Handle double-tap to increase color temperature by 1000K (up_double_press)
       - conditions: "{{ command == 'up_double_press' }}"
         sequence:
+          - variables:
+              current_color_temp: "{{ state_attr(first_light.entity_id, 'color_temp_kelvin') | int }}"
+              max_color_temp: "{{ state_attr(first_light.entity_id, 'max_mireds') | int }}"
           - service: light.turn_on
             target: !input light_entities
             data:
               transition: 0.5
-              color_temp_kelvin: 5500
+              color_temp_kelvin: "{{ [current_color_temp + 1000, max_color_temp] | min }}"
 
-      # Handle double-tap to set color temperature to 2500K (down_double_press)
+      # Handle double-tap to decrease color temperature by 1000K (down_double_press)
       - conditions: "{{ command == 'down_double_press' }}"
         sequence:
+          - variables:
+              current_color_temp: "{{ state_attr(first_light.entity_id, 'color_temp_kelvin') | int }}"
+              min_color_temp: "{{ state_attr(first_light.entity_id, 'min_mireds') | int }}"
           - service: light.turn_on
             target: !input light_entities
             data:
               transition: 0.5
-              color_temp_kelvin: 2500
+              color_temp_kelvin: "{{ [current_color_temp - 1000, min_color_temp] | max }}"
