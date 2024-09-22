@@ -2,7 +2,7 @@
 #-- Version: 1.3
 
 blueprint:
-  name: Philips Hue Dimmer RWL022
+  name: Philips Hue Dimmer RWL022 (v1.3)
   description: >
     Control multiple light entities with a Philips Hue Dimmer Switch
     (v2), with multiple light(s) selected for a single dimmer. Includes
