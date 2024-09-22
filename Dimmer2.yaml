@@ -1,8 +1,8 @@
 #-- Creation: 22 Sep 2024
-#-- Version: 1.8
+#-- Version: 2.1
 
 blueprint:
-  name: Hue Dimmer v2 Control (v1.8)
+  name: Hue Dimmer v2 Control (v2.1)
   description: >
     Control a single light entity with a Philips Hue Dimmer Switch (v2) and adjust color temperature with double clicks.
   domain: automation
@@ -16,6 +16,16 @@ blueprint:
           entity:
             domain: sensor
             device_class: battery
+    color_temp:
+      name: Default Colour Temperature
+      description: The default color temperature in Kelvin when the lights are turned on.
+      selector:
+        color_temp:
+          min: 2100
+          max: 6500
+          unit: kelvin
+        default: 4500
+
     light_entity:
       name: The light entity to control.
       description: The light entity to be controlled by the dimmer switch.
@@ -44,9 +54,13 @@ blueprint:
   action:
     - variables:
         command: "{{ trigger.event.data.command }}"
-        min_temp: "{{ state_attr(light_entity, 'min_mireds') | default(2000) | float * 100 }}"
+        light_entity: !input "light_entity"
+        brightness_steps: !input "brightness_steps"
+        initial_color_temp: !input "color_temp"
+        
+        current_color_temp: "{{ state_attr(light_entity, 'color_temp') | default(initial_color_temp) }}"
+        min_temp: "{{ state_attr(light_entity, 'min_mireds') | default(2100) | float * 100 }}"
         max_temp: "{{ state_attr(light_entity, 'max_mireds') | default(6500) | float * 100 }}"
-        current_color_temp: "{{ state_attr(light_entity, 'color_temp') | default(min_temp) }}"
         temp_range: "{{ max_temp - min_temp }}"
         increment: "{{ (temp_range / 4) | round }}"
 
@@ -59,7 +73,7 @@ blueprint:
                 entity_id: !input "light_entity"
                 transition: 0.4
                 brightness: 255
-                color_temp: "{{ (min_temp + temp_range / 2) | round }}"
+                color_temp: "{{ initial_color_temp }}"
 
         # Handle off_short_release (off action remains the same)
         - conditions: "{{ command == 'off_short_release' }}"
@@ -95,7 +109,7 @@ blueprint:
                 transition: 0.5
                 brightness_step_pct: "{{ brightness_steps*-1 }}"
 
-        # Handle double-tap to adjust temperature
+        # Handle double-tap to increase color temperature
         - conditions: "{{ command == 'up_double_release' }}"
           sequence:
             - service: light.turn_on
@@ -104,6 +118,7 @@ blueprint:
                 transition: 0.5
                 color_temp: "{{ [max_temp, (current_color_temp + increment) | min(max_temp)] | max(min_temp) }}"
 
+        # Handle double-tap to decrease color temperature
         - conditions: "{{ command == 'down_double_release' }}"
           sequence:
             - service: light.turn_on
@@ -111,5 +126,3 @@ blueprint:
                 entity_id: !input "light_entity"
                 transition: 0.5
                 color_temp: "{{ [min_temp, (current_color_temp - increment) | max(min_temp)] | min(max_temp) }}"
-
-  
