@@ -1,8 +1,8 @@
 #-- Creation: 22 Sep 2024 
-#-- Version: 2.20 ALPHA
+#-- Version: 2.21 ALPHA
 
 blueprint:
-  name: Hue Dimmer v2 (v2.20 ALPHA)
+  name: Hue Dimmer v2 (v2.21 ALPHA)
   description: >
     Control a light entity/group with a Philips Hue Dimmer Switch (v2).
   domain: automation
@@ -55,7 +55,13 @@ action:
   - variables:
       command: "{{ trigger.event.data.command }}"
       brightness_steps: !input brightness_steps
-      first_light: "{{ expand(light_entities) | selectattr('domain', 'equalto', 'light') | map(attribute='entity_id') | first }}"
+      first_light: >
+        {% set lights = expand(light_entities) | selectattr('domain', 'equalto', 'light') | map(attribute='entity_id') %}
+        {% if lights | list | length > 0 %}
+          {{ lights | first }}
+        {% else %}
+          {{ light_entities.entity_id if light_entities.entity_id is string else '' }}
+        {% endif %}
       current_color_temp: "{{ state_attr(first_light, 'color_temp_kelvin') | int(default=0) }}"
 
   - choose:
