@@ -1,8 +1,8 @@
 #-- Creation: 22 Sep 2024 
-#-- Version: 2.24 ALPHA
+#-- Version: 2.25 ALPHA
 
 blueprint:
-  name: Hue Dimmer v2 (v2.24 ALPHA)
+  name: Hue Dimmer v2 (v2.25 ALPHA)
   description: >
     Control a light entity/group with a Philips Hue Dimmer Switch (v2).
   domain: automation
@@ -55,13 +55,13 @@ action:
   - variables:
       command: "{{ trigger.event.data.command }}"
       brightness_steps: !input brightness_steps
-      light_entities_target: "{{ expand(light_entities) | selectattr('domain', 'equalto', 'light') | map(attribute='entity_id') | list }}"
-      first_light: "{{ light_entities_target[0] if light_entities_target | length > 0 else '' }}"
+      light_entities_expanded: "{{ expand(light_entities) }}"
+      first_light: "{{ light_entities_expanded | selectattr('domain', 'equalto', 'light') | map(attribute='entity_id') | first }}"
       current_color_temp: "{{ state_attr(first_light, 'color_temp_kelvin') | int(default=0) }}"
 
   - choose:
       # Handle on_press (single press)
-      - conditions: "{{ command == 'on_press' and first_light != '' }}"
+      - conditions: "{{ command == 'on_press' and first_light != none }}"
         sequence:
           - service: light.toggle
             target: !input light_entities
@@ -71,7 +71,7 @@ action:
               color_temp_kelvin: !input initial_color_temp
 
       # Handle off_press (single press)
-      - conditions: "{{ command == 'off_press' and first_light != '' }}"
+      - conditions: "{{ command == 'off_press' and first_light != none }}"
         sequence:
           - service: light.turn_off
             target: !input light_entities
@@ -102,10 +102,10 @@ action:
             target: !input light_entities
             data:
               transition: 0.5
-              brightness_step_pct: "{{ brightness_steps*-1 }}"
+              brightness_step_pct: "{{ brightness_steps * -1 }}"
 
       # Handle double-tap to increase color temperature (up_double_press)
-      - conditions: "{{ command == 'up_double_press' and first_light != '' }}"
+      - conditions: "{{ command == 'up_double_press' and first_light != none }}"
         sequence:
           - service: light.turn_on
             target: !input light_entities
@@ -119,7 +119,7 @@ action:
                 {% endif %}
 
       # Handle double-tap to decrease color temperature (down_double_press)
-      - conditions: "{{ command == 'down_double_press' and first_light != '' }}"
+      - conditions: "{{ command == 'down_double_press' and first_light != none }}"
         sequence:
           - service: light.turn_on
             target: !input light_entities
