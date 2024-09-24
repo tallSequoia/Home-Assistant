@@ -1,8 +1,8 @@
-#-- Creation: 22 Sep 2024 
-#-- Version: 2.28 ALPHA
+#-- Creation: 24 Sep 2024 
+#-- Version: 2.32 ALPHA
 # xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 blueprint:
-  name: Hue Dimmer v2 (v2.28 ALPHA)
+  name: Hue Dimmer v2 (v2.32 ALPHA)
   description: >
     Control a light entity/group with a Philips Hue Dimmer Switch (v2).
   domain: automation
@@ -27,11 +27,9 @@ blueprint:
       default: 3000
     light_entities:
       name: The light entities to control.
-      description: The light entities to be controlled by the dimmer switch.
+      description: The light entities to be controlled by the dimmer switch (can be a label, room, entity, or device).
       selector:
-        target:
-          entity:
-            domain: light
+        target: {}
     brightness_steps:
       name: Percentage to increase or decrease brightness.
       description: The percentage to increase or decrease brightness when the button is pressed.
@@ -55,15 +53,9 @@ action:
   - variables:
       command: "{{ trigger.event.data.command }}"
       brightness_steps: !input brightness_steps
-      light_entities: !input light_entities
-      light_entities_expanded: >
-        {% set expanded = expand(light_entities) %}
-        {% if expanded %}
-          {{ expanded | selectattr('domain', 'equalto', 'light') | list }}
-        {% else %}
-          []
-        {% endif %}
-      first_light: "{{ light_entities_expanded | first if light_entities_expanded | length > 0 else none }}"
+      # Expand the target, which can be a label, device, or individual entity, into a list of light entities
+      light_entities: "{{ expand(target_entities(light_entities)) | selectattr('domain', 'equalto', 'light') | map(attribute='entity_id') | list }}"
+      first_light: "{{ light_entities | first if light_entities | length > 0 else none }}"
       current_color_temp: "{{ state_attr(first_light, 'color_temp_kelvin') | int(default=0) if first_light else 0 }}"
 
   # Log variables for debugging
@@ -72,8 +64,7 @@ action:
       level: warning
       message: >
         [DEBUG] Command received: {{ command }}
-        [DEBUG] Light entities input: {{ light_entities }}
-        [DEBUG] Expanded light entities: {{ light_entities_expanded }}
+        [DEBUG] Light entities: {{ light_entities }}
         [DEBUG] First light entity: {{ first_light }}
         [DEBUG] Current color temperature: {{ current_color_temp }}
         [DEBUG] Brightness step percentage: {{ brightness_steps }}
@@ -163,7 +154,7 @@ action:
                 {% endif %}
 
       # Handle double-tap to decrease color temperature (down_double_press)
-      - conditions: "{{ command == 'down_double_press' and first_light != none }}"
+      - conditions: "{{ command == 'down_double_press' }}"
         sequence:
           - service: system_log.write
             data:
