@@ -1,8 +1,8 @@
 #-- Creation: 22 Sep 2024 
-#-- Version: 2.25 ALPHA
+#-- Version: 2.26 ALPHA
 # xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 blueprint:
-  name: Hue Dimmer v2 (v2.25 ALPHA)
+  name: Hue Dimmer v2 (v2.26 ALPHA)
   description: >
     Control a light entity/group with a Philips Hue Dimmer Switch (v2).
   domain: automation
@@ -55,14 +55,32 @@ action:
   - variables:
       command: "{{ trigger.event.data.command }}"
       brightness_steps: !input brightness_steps
+      light_entities: !input light_entities
       light_entities_expanded: "{{ expand(light_entities) }}"
       first_light: "{{ light_entities_expanded | selectattr('domain', 'equalto', 'light') | map(attribute='entity_id') | first }}"
       current_color_temp: "{{ state_attr(first_light, 'color_temp_kelvin') | int(default=0) }}"
+
+  # Log variables and initial conditions
+  - service: system_log.write
+    data:
+      level: info
+      message: >
+        [DEBUG] Command received: {{ command }}
+        [DEBUG] Light entities: {{ light_entities }}
+        [DEBUG] Expanded light entities: {{ light_entities_expanded }}
+        [DEBUG] First light: {{ first_light }}
+        [DEBUG] Current color temperature: {{ current_color_temp }}
+        [DEBUG] Brightness steps: {{ brightness_steps }}
 
   - choose:
       # Handle on_press (single press)
       - conditions: "{{ command == 'on_press' and first_light != none }}"
         sequence:
+          - service: system_log.write
+            data:
+              level: info
+              message: "[DEBUG] on_press detected: Toggling light."
+
           - service: light.toggle
             target: !input light_entities
             data:
@@ -73,6 +91,11 @@ action:
       # Handle off_press (single press)
       - conditions: "{{ command == 'off_press' and first_light != none }}"
         sequence:
+          - service: system_log.write
+            data:
+              level: info
+              message: "[DEBUG] off_press detected: Turning off light."
+
           - service: light.turn_off
             target: !input light_entities
             data:
@@ -85,6 +108,11 @@ action:
               - "{{ command == 'up_press' }}"
               - "{{ command == 'up_hold' }}"
         sequence:
+          - service: system_log.write
+            data:
+              level: info
+              message: "[DEBUG] Brightness up detected. Increasing brightness by {{ brightness_steps }}%."
+
           - service: light.turn_on
             target: !input light_entities
             data:
@@ -98,6 +126,11 @@ action:
               - "{{ command == 'down_press' }}"
               - "{{ command == 'down_hold' }}"
         sequence:
+          - service: system_log.write
+            data:
+              level: info
+              message: "[DEBUG] Brightness down detected. Decreasing brightness by {{ brightness_steps }}%."
+
           - service: light.turn_on
             target: !input light_entities
             data:
@@ -107,6 +140,11 @@ action:
       # Handle double-tap to increase color temperature (up_double_press)
       - conditions: "{{ command == 'up_double_press' and first_light != none }}"
         sequence:
+          - service: system_log.write
+            data:
+              level: info
+              message: "[DEBUG] Double press up detected. Current color temp: {{ current_color_temp }}. Increasing color temperature."
+
           - service: light.turn_on
             target: !input light_entities
             data:
@@ -121,6 +159,11 @@ action:
       # Handle double-tap to decrease color temperature (down_double_press)
       - conditions: "{{ command == 'down_double_press' and first_light != none }}"
         sequence:
+          - service: system_log.write
+            data:
+              level: info
+              message: "[DEBUG] Double press down detected. Current color temp: {{ current_color_temp }}. Decreasing color temperature."
+
           - service: light.turn_on
             target: !input light_entities
             data:
