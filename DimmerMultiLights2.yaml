@@ -39,6 +39,11 @@ blueprint:
           max: 50
           unit_of_measurement: "%"
       default: 18
+  off_double_press_action:
+    name: Action for Off Double Press
+    description: Specify the service call to execute when the off button is double pressed.
+    selector:
+      action: {}
 
 mode: single
 
