@@ -1,6 +1,6 @@
 blueprint:
-  name: "TuYa Smart Knob (TS004F) v1.4"
-  description: "Control devices and scenes with toggle and rotation actions from a TuYa Smart Knob (TS004F)."
+  name: "TuYa Smart Knob (TS004F) v1.10"
+  description: "Control devices and scenes with tap and rotation actions from a TuYa Smart Knob (TS004F)."
   domain: automation
   input:
     knob_device:
@@ -10,13 +10,13 @@ blueprint:
         device:
           integration: zha # Or deconz, zigbee2mqtt
     toggle_action:
-      name: "Toggle Action"
-      description: "Action to perform on a tap/toggle."
+      name: "Tap"
+      description: "Action to perform on a tap on the top."
       default: []
       selector:
         action: {}
     rotate_left_action:
-      name: "Rotate Left Action"
+      name: "Rotate Left"
       description: "Action to perform on rotation to the left (CCW)."
       default: []
       selector:
