@@ -1,5 +1,5 @@
 blueprint:
-  name: "TuYa Smart Knob (TS004F) v1.8"
+  name: "TuYa Smart Knob (TS004F) v1.9"
   description: "Control devices and scenes with single tap, double tap, and rotation actions from a TuYa Smart Knob (TS004F)."
   domain: automation
   input:
@@ -64,11 +64,11 @@ action:
               value: "{{ double_tap_counter + 1 }}"
           - delay:
               seconds: !input double_tap_timeout
-          - choose:
+          - choose: # Correct indentation here
               - conditions:
                   - "{{ double_tap_counter == 2 }}"
                 sequence: !input double_tap_action
-              default: !input single_tap_action
+              default: !input single_tap_action # Correct indentation here
           - service: variable.set_variable
             data:
               variable: double_tap_counter
