@@ -1,6 +1,6 @@
 blueprint:
-  name: "TuYa Smart Knob (TS004F) v1.1" # Version added, "Actions" removed, incremented to v1.1
-  description: "Control devices and scenes with click and rotation actions from a TuYa Smart Knob (TS004F)."
+  name: "TuYa Smart Knob (TS004F) v1.4"
+  description: "Control devices and scenes with toggle and rotation actions from a TuYa Smart Knob (TS004F)."
   domain: automation
   input:
     knob_device:
@@ -9,33 +9,21 @@ blueprint:
       selector:
         device:
           integration: zha # Or deconz, zigbee2mqtt
-    single_press_action:
-      name: "Single Press Action"
-      description: "Action to perform on a single press."
+    toggle_action:
+      name: "Toggle Action"
+      description: "Action to perform on a tap/toggle."
       default: []
       selector:
         action: {}
-    double_press_action:
-      name: "Double Press Action"
-      description: "Action to perform on a double press."
+    rotate_left_action:
+      name: "Rotate Left Action"
+      description: "Action to perform on rotation to the left (CCW)."
       default: []
       selector:
         action: {}
-    long_press_action:
-      name: "Long Press Action"
-      description: "Action to perform on a long press."
-      default: []
-      selector:
-        action: {}
-    rotation_left_action:
-      name: "Rotation Left Action"
-      description: "Action to perform on rotation to the left."
-      default: []
-      selector:
-        action: {}
-    rotation_right_action:
-      name: "Rotation Right Action"
-      description: "Action to perform on rotation to the right."
+    rotate_right_action:
+      name: "Rotate Right Action"
+      description: "Action to perform on rotation to the right (CW)."
       default: []
       selector:
         action: {}
@@ -50,18 +38,14 @@ trigger:
 action:
   - choose:
       - conditions:
-          - "{{ trigger.event.data.command == 'single' }}"
-        sequence: !input single_press_action
+          - "{{ trigger.event.data.command == 'toggle' }}"
+        sequence: !input toggle_action
       - conditions:
-          - "{{ trigger.event.data.command == 'double' }}"
-        sequence: !input double_press_action
+          - "{{ trigger.event.data.command == 'step' }}" # Condition for rotation
+          - "{{ trigger.event.data.params.step_mode == 1 }}" # Check for rotation direction (Down/CCW)
+        sequence: !input rotate_left_action
       - conditions:
-          - "{{ trigger.event.data.command == 'hold' }}" # Or 'long_press'
-        sequence: !input long_press_action
-      - conditions:
-          - "{{ trigger.event.data.args.rotation == 'CCW' }}" # Check your events
-        sequence: !input rotation_left_action
-      - conditions:
-          - "{{ trigger.event.data.args.rotation == 'CW' }}" # Check your events
-        sequence: !input rotation_right_action
+          - "{{ trigger.event.data.command == 'step' }}" # Condition for rotation
+          - "{{ trigger.event.data.params.step_mode == 0 }}" # Check for rotation direction (Up/CW)
+        sequence: !input rotate_right_action
     default: []
