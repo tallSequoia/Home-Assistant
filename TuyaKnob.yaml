@@ -7,9 +7,8 @@ blueprint:
       name: "Smart Knob"
       description: "Select your TuYa Smart Knob (TS004F) device."
       selector:
-        entity:
-          integration: zha # Or deconz, zigbee2mqtt, depending on your setup
-          domain: sensor # Some integrations expose it as a sensor
+        device:
+          integration: zha # Or deconz, zigbee2mqtt
     single_press_action:
       name: "Single Press Action"
       description: "Action to perform on a single press."
