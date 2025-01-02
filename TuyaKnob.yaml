@@ -1,5 +1,5 @@
 blueprint:
-  name: "TuYa Smart Knob (TS004F) Actions"
+  name: "TuYa Smart Knob (TS004F) v1.1" # Version added, "Actions" removed, incremented to v1.1
   description: "Control devices and scenes with click and rotation actions from a TuYa Smart Knob (TS004F)."
   domain: automation
   input:
@@ -45,7 +45,7 @@ trigger:
   - platform: event
     event_type: zha_event # Or deconz_event, mqtt for Zigbee2MQTT
     event_data:
-      device_ieee: !input knob_device # This is the key for dynamic device selection
+      device_id: !input knob_device
 
 action:
   - choose:
@@ -56,15 +56,12 @@ action:
           - "{{ trigger.event.data.command == 'double' }}"
         sequence: !input double_press_action
       - conditions:
-          - "{{ trigger.event.data.command == 'hold' }}" # Or 'long_press', check your events
+          - "{{ trigger.event.data.command == 'hold' }}" # Or 'long_press'
         sequence: !input long_press_action
       - conditions:
-          - "{{ trigger.event.data.args.rotation == 'CCW' }}" # Check your events for rotation data
+          - "{{ trigger.event.data.args.rotation == 'CCW' }}" # Check your events
         sequence: !input rotation_left_action
       - conditions:
-          - "{{ trigger.event.data.args.rotation == 'CW' }}" # Check your events for rotation data
+          - "{{ trigger.event.data.args.rotation == 'CW' }}" # Check your events
         sequence: !input rotation_right_action
     default: []
-
-variables:
-  device_ieee: "{{ trigger.event.data.device_ieee }}"
