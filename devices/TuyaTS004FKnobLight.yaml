@@ -1,11 +1,11 @@
 # # # # # # # #
 # Tuya TS004F Smart Knob for Lights
 # Creation: 9 Jan 2025
-# Version: 1.13
+# Version: 1.15
 # # # # # # # #
 
 blueprint:
-  name: Tuya TS004F Smart Knob for Lights (v1.13)
+  name: Tuya TS004F Smart Knob for Lights (v1.15)
   description: >
     Use a Tuya Smart Knob (TS004F) to control brightness, toggle lights, and adjust color and color temperature (in Kelvin) for selected light(s). Instant transitions for immediate user feedback.
   domain: automation
@@ -117,7 +117,7 @@ action:
       # Hold and Rotate Left (CCW) to decrease color temperature
       - conditions:
           - "{{ trigger.event.data.command == 'step_color_temp' }}"
-          - "{{ trigger.event.data.params.step_mode == 1 }}" # Down/CCW
+          - "{{ trigger.event.data.params.step_mode == 3 }}" # Down/CCW
         sequence:
           - service: light.turn_on
             target: !input target_lights
