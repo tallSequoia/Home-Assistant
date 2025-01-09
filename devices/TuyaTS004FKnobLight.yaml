@@ -1,11 +1,10 @@
 # # # # # # # #
 # Tuya TS004F Smart Knob for Lights
 # Creation: 9 Jan 2025
-# Version: 1.3
+# Version: 1.5
 # # # # # # # #
-
 blueprint:
-  name: Tuya TS004F Smart Knob for Lights (v1.3)
+  name: Tuya TS004F Smart Knob for Lights (v1.5)
   description: >
     Use a TuYa Smart Knob (TS004F) to control brightness, toggle lights, and adjust color and color temperature for selected light(s).
   domain: automation
@@ -36,30 +35,23 @@ blueprint:
     default_brightness:
       name: "Default Brightness"
       description: "Brightness level to set when turning on the light(s)."
-      default: 50
+      default: 255
       selector:
         number:
           min: 1
-          max: 100
-          unit_of_measurement: "%"
+          max: 255
+          unit_of_measurement: "level"
           mode: slider
     default_color_temp:
-      name: "Default Color Temperature"
-      description: "Default color temperature (in mireds) for the light(s)."
-      default: 370
+      name: "Default Color Temperature (Kelvin)"
+      description: "Default color temperature (in kelvins) for the light(s)."
+      default: 3700
       selector:
         number:
-          min: 153
-          max: 500
-          unit_of_measurement: "mireds"
+          min: 2700
+          max: 6500
+          unit_of_measurement: "K"
           mode: slider
-    default_color:
-      name: "Default Color"
-      description: >
-        Default color for the light(s). Choose a full color or white. If left blank, color temperature will be used.
-      selector:
-        light_color:
-          mode: full
     color_temp_step:
       name: "Color Temperature Step"
       description: "Amount to increase or decrease the color temperature with each rotation."
@@ -70,20 +62,11 @@ blueprint:
           max: 100
           unit_of_measurement: "mireds"
           mode: slider
-    color_step:
-      name: "Color Adjustment Step"
-      description: "Amount to adjust the color by during hold and rotate."
-      default: 10
-      selector:
-        number:
-          min: 1
-          max: 100
-          mode: slider
 
 mode: restart
 trigger:
   - platform: event
-    event_type: zha_event # Or deconz_event, mqtt for Zigbee2MQTT
+    event_type: zha_event
     event_data:
       device_id: !input knob_device
 
@@ -96,11 +79,9 @@ action:
           - service: light.toggle
             target: !input target_lights
             data:
-              brightness_pct: !input default_brightness
-              rgb_color: >
-                {{ default_color['rgb_color'] if default_color and 'rgb_color' in default_color else null }}
-              color_temp: >
-                {{ default_color_temp if not default_color or 'color_temp' not in default_color else null }}
+              transition: 0.4
+              brightness: !input default_brightness
+              color_temp_kelvin: !input default_color_temp
 
       # Rotate Left (CCW) to decrease brightness
       - conditions:
@@ -132,17 +113,7 @@ action:
             target: !input target_lights
             data:
               transition: 1
-              color_temp_step: "{{ trigger.event.data.params.step_size | int * (color_temp_step | int) }}"
-
-      # Hold and Rotate to adjust color
-      - conditions:
-          - "{{ trigger.event.data.command == 'step_color' }}"
-        sequence:
-          - service: light.turn_on
-            target: !input target_lights
-            data:
-              transition: 1
-              color_step: "{{ trigger.event.data.params.step_size | int * (color_step | int) }}"
+              color_temp: >
+                {{ (state_attr(target_lights.entity_id, 'color_temp') | int) + (trigger.event.data.params.step_size | int * (color_temp_step | int)) }}
 
     default: []
-    
