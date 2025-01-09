@@ -122,12 +122,12 @@ action:
             target: !input target_lights
             data:
               transition: 0.5
-              color_temp: >
+              color_temp_kelvin: >
                 {{
                   [
-                    state_attr(target_lights.entity_id, 'color_temp') | int + (color_temp_step | int),
-                    500
-                  ] | min
+                    (state_attr(target_lights.entity_id, 'color_temp_kelvin') | int) - (color_temp_step | int),
+                    2700
+                  ] | max
                 }}
 
       # Hold and Rotate Right (CW) to increase color temperature
@@ -139,12 +139,12 @@ action:
             target: !input target_lights
             data:
               transition: 0.5
-              color_temp: >
+              color_temp_kelvin: >
                 {{
                   [
-                    state_attr(target_lights.entity_id, 'color_temp') | int - (color_temp_step | int),
-                    153
-                  ] | max
+                    (state_attr(target_lights.entity_id, 'color_temp_kelvin') | int) + (color_temp_step | int),
+                    6500
+                  ] | min
                 }}
-
+                
     default: []
