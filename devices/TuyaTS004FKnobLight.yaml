@@ -1,13 +1,13 @@
 # # # # # # # #
 # Tuya TS004F Smart Knob for Lights
 # Creation: 9 Jan 2025
-# Version: 1.17
+# Version: 1.16
 # # # # # # # #
 
 blueprint:
-  name: Tuya TS004F Smart Knob for Lights (v1.17)
+  name: Tuya TS004F Smart Knob for Lights (v1.16)
   description: >
-    Use a Tuya Smart Knob (TS004F) to control brightness, toggle lights, and adjust color and color temperature (in Kelvin) for selected light(s). Instant transitions for immediate user feedback. Configurable full-turn range.
+    Use a Tuya Smart Knob (TS004F) to control brightness, toggle lights, and adjust color and color temperature (in Kelvin) for selected light(s). Instant transitions for immediate user feedback.
   domain: automation
   input:
     knob_device:
@@ -43,24 +43,6 @@ blueprint:
           max: 6500
           unit_of_measurement: "K"
           mode: slider
-    full_turns_brightness:
-      name: "Number of Full Turns for Brightness Adjustment"
-      description: "Number of full knob turns to traverse the full brightness range (0-255)."
-      default: 2
-      selector:
-        number:
-          min: 1
-          max: 5
-          unit_of_measurement: "turns"
-    full_turns_color_temp:
-      name: "Number of Full Turns for Color Temperature Adjustment"
-      description: "Number of full knob turns to traverse the full color temperature range (2700K-6500K)."
-      default: 2
-      selector:
-        number:
-          min: 1
-          max: 5
-          unit_of_measurement: "turns"
 
 mode: queued
 max_exceeded: silent
@@ -69,12 +51,6 @@ variables:
   target_lights: !input target_lights
   default_brightness: !input default_brightness
   default_color_temp: !input default_color_temp
-  full_turns_brightness: !input full_turns_brightness
-  full_turns_color_temp: !input full_turns_color_temp
-
-  # Calculated step factors
-  brightness_step_factor: "{{ 255 / (full_turns_brightness * 255) }}"  # One full turn = 255 steps
-  color_temp_step_factor: "{{ (6500 - 2700) / (full_turns_color_temp * 255) }}"  # One full turn = 255 steps
 
 trigger:
   - platform: event
@@ -107,7 +83,7 @@ action:
                 {{
                   [
                     (state_attr(target_lights.entity_id, 'brightness') | int) + 
-                    (trigger.event.data.params.step_size * brightness_step_factor | float * (1 if trigger.event.data.params.step_mode == 0 else -1)),
+                    (trigger.event.data.params.step_size * 0.333 * (1 if trigger.event.data.params.step_mode == 0 else -1)),
                     0,
                     255
                   ] | sort | slice(1, 2) | first
@@ -125,7 +101,7 @@ action:
                 {{
                   [
                     (state_attr(target_lights.entity_id, 'color_temp_kelvin') | int) +
-                    (trigger.event.data.params.step_size * color_temp_step_factor | float * (1 if trigger.event.data.params.step_mode == 0 else -1)),
+                    (trigger.event.data.params.step_size * 4.31 * (1 if trigger.event.data.params.step_mode == 0 else -1)),
                     2700,
                     6500
                   ] | sort | slice(1, 2) | first
