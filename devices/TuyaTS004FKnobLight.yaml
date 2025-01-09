@@ -1,12 +1,13 @@
 # # # # # # # #
 # Tuya TS004F Smart Knob for Lights
 # Creation: 9 Jan 2025
-# Version: 1.1
+# Version: 1.3
 # # # # # # # #
+
 blueprint:
-  name: Tuya TS004F Smart Knob for Lights (v1.1)
+  name: Tuya TS004F Smart Knob for Lights (v1.3)
   description: >
-    Use a TuYa Smart Knob (TS004F) to control brightness, toggle lights, and adjust color temperature for selected light(s).
+    Use a TuYa Smart Knob (TS004F) to control brightness, toggle lights, and adjust color and color temperature for selected light(s).
   domain: automation
   input:
     knob_device:
@@ -52,6 +53,32 @@ blueprint:
           max: 500
           unit_of_measurement: "mireds"
           mode: slider
+    default_color:
+      name: "Default Color"
+      description: >
+        Default color for the light(s). Choose a full color or white. If left blank, color temperature will be used.
+      selector:
+        light_color:
+          mode: full
+    color_temp_step:
+      name: "Color Temperature Step"
+      description: "Amount to increase or decrease the color temperature with each rotation."
+      default: 10
+      selector:
+        number:
+          min: 1
+          max: 100
+          unit_of_measurement: "mireds"
+          mode: slider
+    color_step:
+      name: "Color Adjustment Step"
+      description: "Amount to adjust the color by during hold and rotate."
+      default: 10
+      selector:
+        number:
+          min: 1
+          max: 100
+          mode: slider
 
 mode: restart
 trigger:
@@ -70,7 +97,10 @@ action:
             target: !input target_lights
             data:
               brightness_pct: !input default_brightness
-              color_temp: !input default_color_temp
+              rgb_color: >
+                {{ default_color['rgb_color'] if default_color and 'rgb_color' in default_color else null }}
+              color_temp: >
+                {{ default_color_temp if not default_color or 'color_temp' not in default_color else null }}
 
       # Rotate Left (CCW) to decrease brightness
       - conditions:
@@ -102,6 +132,17 @@ action:
             target: !input target_lights
             data:
               transition: 1
-              color_temp_step: "{{ trigger.event.data.params.step_size | int }}"
+              color_temp_step: "{{ trigger.event.data.params.step_size | int * (color_temp_step | int) }}"
+
+      # Hold and Rotate to adjust color
+      - conditions:
+          - "{{ trigger.event.data.command == 'step_color' }}"
+        sequence:
+          - service: light.turn_on
+            target: !input target_lights
+            data:
+              transition: 1
+              color_step: "{{ trigger.event.data.params.step_size | int * (color_step | int) }}"
 
     default: []
+    
