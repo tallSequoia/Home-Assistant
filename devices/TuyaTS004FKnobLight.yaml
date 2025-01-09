@@ -1,0 +1,107 @@
+# # # # # # # #
+# Tuya TS004F Smart Knob for Lights
+# Creation: 9 Jan 2025
+# Version: 1.1
+# # # # # # # #
+blueprint:
+  name: Tuya TS004F Smart Knob for Lights (v1.1)
+  description: >
+    Use a TuYa Smart Knob (TS004F) to control brightness, toggle lights, and adjust color temperature for selected light(s).
+  domain: automation
+  input:
+    knob_device:
+      name: "Smart Knob"
+      description: "Select your TuYa Smart Knob (TS004F) device."
+      selector:
+        device:
+          integration: zha # Or deconz, zigbee2mqtt
+    target_lights:
+      name: "Lights to Control"
+      description: "Select the lights to control with the knob."
+      selector:
+        target:
+          entity:
+            domain: light
+    brightness_step:
+      name: "Brightness Step"
+      description: "Amount to increase or decrease brightness with each rotation."
+      default: 10
+      selector:
+        number:
+          min: 1
+          max: 100
+          unit_of_measurement: "%"
+          mode: slider
+    default_brightness:
+      name: "Default Brightness"
+      description: "Brightness level to set when turning on the light(s)."
+      default: 50
+      selector:
+        number:
+          min: 1
+          max: 100
+          unit_of_measurement: "%"
+          mode: slider
+    default_color_temp:
+      name: "Default Color Temperature"
+      description: "Default color temperature (in mireds) for the light(s)."
+      default: 370
+      selector:
+        number:
+          min: 153
+          max: 500
+          unit_of_measurement: "mireds"
+          mode: slider
+
+mode: restart
+trigger:
+  - platform: event
+    event_type: zha_event # Or deconz_event, mqtt for Zigbee2MQTT
+    event_data:
+      device_id: !input knob_device
+
+action:
+  - choose:
+      # Tap to toggle light(s)
+      - conditions:
+          - "{{ trigger.event.data.command == 'toggle' }}"
+        sequence:
+          - service: light.toggle
+            target: !input target_lights
+            data:
+              brightness_pct: !input default_brightness
+              color_temp: !input default_color_temp
+
+      # Rotate Left (CCW) to decrease brightness
+      - conditions:
+          - "{{ trigger.event.data.command == 'step' }}"
+          - "{{ trigger.event.data.params.step_mode == 1 }}" # Down/CCW
+        sequence:
+          - service: light.turn_on
+            target: !input target_lights
+            data:
+              transition: 1
+              brightness_step_pct: "{{ -1 * (brightness_step | int) }}"
+
+      # Rotate Right (CW) to increase brightness
+      - conditions:
+          - "{{ trigger.event.data.command == 'step' }}"
+          - "{{ trigger.event.data.params.step_mode == 0 }}" # Up/CW
+        sequence:
+          - service: light.turn_on
+            target: !input target_lights
+            data:
+              transition: 1
+              brightness_step_pct: "{{ brightness_step | int }}"
+
+      # Hold and Rotate to adjust color temperature
+      - conditions:
+          - "{{ trigger.event.data.command == 'step_color_temp' }}"
+        sequence:
+          - service: light.turn_on
+            target: !input target_lights
+            data:
+              transition: 1
+              color_temp_step: "{{ trigger.event.data.params.step_size | int }}"
+
+    default: []
