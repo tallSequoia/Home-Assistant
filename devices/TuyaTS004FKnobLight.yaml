@@ -1,11 +1,11 @@
 # # # # # # # #
 # Tuya TS004F Smart Knob for Lights
 # Creation: 9 Jan 2025
-# Version: 1.15
+# Version: 1.18
 # # # # # # # #
 
 blueprint:
-  name: Tuya TS004F Smart Knob for Lights (v1.15)
+  name: Tuya TS004F Smart Knob for Lights (v1.18)
   description: >
     Use a Tuya Smart Knob (TS004F) to control brightness, toggle lights, and adjust color and color temperature (in Kelvin) for selected light(s). Instant transitions for immediate user feedback.
   domain: automation
@@ -25,7 +25,7 @@ blueprint:
             domain: light
     brightness_step:
       name: "Percentage to increase or decrease brightness."
-      description: "The percentage to increase or decrease brightness when the button is pressed."
+      description: "The percentage to increase or decrease brightness when the knob is rotated."
       selector:
         number:
           min: 1
@@ -44,7 +44,7 @@ blueprint:
           mode: slider
     default_color_temp:
       name: "Default Color Temperature (Kelvin)"
-      description: "Default color temperature (in Kelvin) for the light(s)."
+      description: "Default color temperature (in kelvins) for the light(s)."
       default: 3700
       selector:
         number:
@@ -53,12 +53,12 @@ blueprint:
           unit_of_measurement: "K"
           mode: slider
     color_temp_step:
-      name: "Color Temperature Step (Kelvin)"
-      description: "Amount to increase or decrease the color temperature (in Kelvin) with each rotation."
-      default: 500
+      name: "Color Temperature Step"
+      description: "Amount to increase or decrease the color temperature with each rotation."
+      default: 100
       selector:
         number:
-          min: 100
+          min: 10
           max: 1000
           unit_of_measurement: "K"
           mode: slider
@@ -117,7 +117,7 @@ action:
       # Hold and Rotate Left (CCW) to decrease color temperature
       - conditions:
           - "{{ trigger.event.data.command == 'step_color_temp' }}"
-          - "{{ trigger.event.data.params.step_mode == 3 }}" # Down/CCW
+          - "{{ trigger.event.data.params.step_mode == 1 }}" # Down/CCW
         sequence:
           - service: light.turn_on
             target: !input target_lights
