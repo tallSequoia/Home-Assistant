@@ -63,7 +63,8 @@ blueprint:
           unit_of_measurement: "K"
           mode: slider
 
-mode: queued
+#mode: queued
+mode: single
 max_exceeded: silent
 
 variables:
