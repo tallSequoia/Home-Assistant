@@ -1,11 +1,12 @@
-#-- Creation: 22 Sep 2024
-#-- Version: 1.53
-
+# # # # # # # #
+# Hue Dimmer v2
+# Creation: 22 Sep 2024
+# Version: 1.53
+# # # # # # # #
 blueprint:
   name: Hue Dimmer v2 (v1.53) 
   description: >
-    Control multiple light entities with a Philips Hue Dimmer Switch
-    (v2), with multiple light(s) selected for a single dimmer
+    Control multiple light entities with a Philips Hue Dimmer Switch (v2 - RWL022) for multiple lights
   domain: automation
   input:
     remote:
