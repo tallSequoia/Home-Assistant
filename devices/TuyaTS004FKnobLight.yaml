@@ -89,7 +89,7 @@ action:
           - "{{ trigger.event.data.params.step_mode == 1 }}" # Down/CCW
         sequence:
           - service: light.turn_on
-            target: !input "target_lights"
+            target: !input target_lights
             data:
               transition: 0.5
               brightness_step_pct: "{{ brightness_step }}"
@@ -100,7 +100,7 @@ action:
           - "{{ trigger.event.data.params.step_mode == 0 }}" # Up/CW
         sequence:
           - service: light.turn_on
-            target: !input "target_lights"
+            target: !input target_lights
             data:
               transition: 0.5
               brightness_step_pct: "{{ brightness_steps * -1 }}"
