@@ -1,21 +1,20 @@
 # # # # # # # #
-# Smart Knob
+# Tuya TS004F Smart Knob
 # Creation: 9 Jan 2025
-# Version: 1.11
+# Version: 1.12
 # # # # # # # #
 blueprint:
-  name: Smart Knob (v1.11) 
+  name: Tuya TS004F Smart Knob (v1.12)
   description: >
     Control devices and scenes with tap and rotation actions from one or more Smart Knobs (e.g. Tuya TS004F).
   domain: automation
   input:
-    knob_devices:
-      name: "Smart Knob(s)"
-      description: "Select one or more TuYa Smart Knob (TS004F) devices."
+    knob_device:
+      name: "Smart Knob"
+      description: "Select your TuYa Smart Knob (TS004F) device."
       selector:
-        target:
-          entity:
-            integration: zha # Or deconz, zigbee2mqtt
+        device:
+          integration: zha # Or deconz, zigbee2mqtt
     toggle_action:
       name: "Tap"
       description: "Action to perform on a tap on the top."
@@ -40,8 +39,7 @@ trigger:
   - platform: event
     event_type: zha_event # Or deconz_event, mqtt for Zigbee2MQTT
     event_data:
-      device_id: >
-        {{ trigger.event.data.device_id in (knob_devices.entity_id | list) }}
+      device_id: !input knob_device
 
 action:
   - choose:
@@ -57,3 +55,4 @@ action:
           - "{{ trigger.event.data.params.step_mode == 0 }}" # Check for rotation direction (Up/CW)
         sequence: !input rotate_right_action
     default: []
+    
