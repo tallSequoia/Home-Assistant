@@ -58,8 +58,8 @@ blueprint:
       default: 100
       selector:
         number:
-          min: 10
-          max: 1000
+          min: 100
+          max: 4000
           unit_of_measurement: "K"
           mode: slider
 
