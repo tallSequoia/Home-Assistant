@@ -134,7 +134,7 @@ action:
       # Hold and Rotate Right (CW) to increase color temperature
       - conditions:
           - "{{ trigger.event.data.command == 'step_color_temp' }}"
-          - "{{ trigger.event.data.params.step_mode == 0 }}" # Up/CW
+          - "{{ trigger.event.data.params.step_mode == 1 }}" # Up/CW
         sequence:
           - service: light.turn_on
             target: !input target_lights
