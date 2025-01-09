@@ -1,10 +1,10 @@
 # # # # # # # #
 # Tuya TS004F Smart Knob for Lights
 # Creation: 9 Jan 2025
-# Version: 1.9
+# Version: 1.10
 # # # # # # # #
 blueprint:
-  name: Tuya TS004F Smart Knob for Lights (v1.9)
+  name: Tuya TS004F Smart Knob for Lights (v1.10)
   description: >
     Use a Tuya Smart Knob (TS004F) to control brightness, toggle lights, and adjust color and color temperature for selected light(s).
   domain: automation
