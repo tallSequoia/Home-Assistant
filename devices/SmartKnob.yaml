@@ -1,14 +1,21 @@
+# # # # # # # #
+# Smart Knob
+# Creation: 9 Jan 2025
+# Version: 1.11
+# # # # # # # #
 blueprint:
-  name: "TuYa Smart Knob (TS004F) v1.10"
-  description: "Control devices and scenes with tap and rotation actions from a TuYa Smart Knob (TS004F)."
+  name: Smart Knob (v1.11) 
+  description: >
+    Control devices and scenes with tap and rotation actions from one or more Smart Knobs (e.g. Tuya TS004F).
   domain: automation
   input:
-    knob_device:
-      name: "Smart Knob"
-      description: "Select your TuYa Smart Knob (TS004F) device."
+    knob_devices:
+      name: "Smart Knob(s)"
+      description: "Select one or more TuYa Smart Knob (TS004F) devices."
       selector:
-        device:
-          integration: zha # Or deconz, zigbee2mqtt
+        target:
+          entity:
+            integration: zha # Or deconz, zigbee2mqtt
     toggle_action:
       name: "Tap"
       description: "Action to perform on a tap on the top."
@@ -33,7 +40,8 @@ trigger:
   - platform: event
     event_type: zha_event # Or deconz_event, mqtt for Zigbee2MQTT
     event_data:
-      device_id: !input knob_device
+      device_id: >
+        {{ trigger.event.data.device_id in (knob_devices.entity_id | list) }}
 
 action:
   - choose:
