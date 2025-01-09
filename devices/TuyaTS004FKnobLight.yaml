@@ -1,10 +1,10 @@
 # # # # # # # #
 # Tuya TS004F Smart Knob for Lights
 # Creation: 9 Jan 2025
-# Version: 1.8
+# Version: 1.9
 # # # # # # # #
 blueprint:
-  name: Tuya TS004F Smart Knob for Lights (v1.8)
+  name: Tuya TS004F Smart Knob for Lights (v1.9)
   description: >
     Use a Tuya Smart Knob (TS004F) to control brightness, toggle lights, and adjust color and color temperature for selected light(s).
   domain: automation
@@ -23,15 +23,14 @@ blueprint:
           entity:
             domain: light
     brightness_step:
-      name: "Brightness Step"
-      description: "Amount to increase or decrease brightness with each rotation."
-      default: 10
+      name: "Percentage to increase or decrease brightness."
+      description: "The percentage to increase or decrease brightness when the button is pressed."
       selector:
         number:
           min: 1
-          max: 100
+          max: 50
           unit_of_measurement: "%"
-          mode: slider
+      default: 18
     default_brightness:
       name: "Default Brightness"
       description: "Brightness level to set when turning on the light(s)."
@@ -63,7 +62,16 @@ blueprint:
           unit_of_measurement: "mireds"
           mode: slider
 
-mode: restart
+mode: single
+max_exceeded: silent
+
+variables:
+  target_lights: !input target_lights
+  default_brightness: !input default_brightness
+  brightness_step: !input brightness_step
+  default_color_temp: !input default_color_temp
+  color_temp_step: !input color_temp_step
+
 trigger:
   - platform: event
     event_type: zha_event
@@ -117,7 +125,7 @@ action:
               color_temp: >
                 {{
                   [
-                    state_attr(trigger.event.data.device_ieee, 'color_temp') | int + (color_temp_step | int),
+                    state_attr(target_lights.entity_id, 'color_temp') | int + (color_temp_step | int),
                     500
                   ] | min
                 }}
@@ -134,7 +142,7 @@ action:
               color_temp: >
                 {{
                   [
-                    state_attr(trigger.event.data.device_ieee, 'color_temp') | int - (color_temp_step | int),
+                    state_attr(target_lights.entity_id, 'color_temp') | int - (color_temp_step | int),
                     153
                   ] | max
                 }}
