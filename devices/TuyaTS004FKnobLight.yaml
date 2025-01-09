@@ -1,11 +1,11 @@
 # # # # # # # #
 # Tuya TS004F Smart Knob for Lights
 # Creation: 9 Jan 2025
-# Version: 1.16
+# Version: 1.15
 # # # # # # # #
 
 blueprint:
-  name: Tuya TS004F Smart Knob for Lights (v1.16)
+  name: Tuya TS004F Smart Knob for Lights (v1.15)
   description: >
     Use a Tuya Smart Knob (TS004F) to control brightness, toggle lights, and adjust color and color temperature (in Kelvin) for selected light(s). Instant transitions for immediate user feedback.
   domain: automation
@@ -23,6 +23,15 @@ blueprint:
         target:
           entity:
             domain: light
+    brightness_step:
+      name: "Percentage to increase or decrease brightness."
+      description: "The percentage to increase or decrease brightness when the button is pressed."
+      selector:
+        number:
+          min: 1
+          max: 50
+          unit_of_measurement: "%"
+      default: 18
     default_brightness:
       name: "Default Brightness"
       description: "Brightness level to set when turning on the light(s)."
@@ -43,6 +52,16 @@ blueprint:
           max: 6500
           unit_of_measurement: "K"
           mode: slider
+    color_temp_step:
+      name: "Color Temperature Step (Kelvin)"
+      description: "Amount to increase or decrease the color temperature (in Kelvin) with each rotation."
+      default: 500
+      selector:
+        number:
+          min: 100
+          max: 1000
+          unit_of_measurement: "K"
+          mode: slider
 
 mode: queued
 max_exceeded: silent
@@ -50,7 +69,9 @@ max_exceeded: silent
 variables:
   target_lights: !input target_lights
   default_brightness: !input default_brightness
+  brightness_step: !input brightness_step
   default_color_temp: !input default_color_temp
+  color_temp_step: !input color_temp_step
 
 trigger:
   - platform: event
@@ -71,27 +92,32 @@ action:
               brightness: !input default_brightness
               color_temp_kelvin: !input default_color_temp
 
-      # Rotate to change brightness (CW/CCW)
+      # Rotate Left (CCW) to decrease brightness
       - conditions:
           - "{{ trigger.event.data.command == 'step' }}"
+          - "{{ trigger.event.data.params.step_mode == 1 }}" # Down/CCW
         sequence:
           - service: light.turn_on
             target: !input target_lights
             data:
               transition: 0
-              brightness: >
-                {{
-                  [
-                    (state_attr(target_lights.entity_id, 'brightness') | int) + 
-                    (trigger.event.data.params.step_size * 0.333 * (1 if trigger.event.data.params.step_mode == 0 else -1)),
-                    0,
-                    255
-                  ] | sort | slice(1, 2) | first
-                }}
+              brightness_step_pct: "{{ -1 * (brightness_step | int) }}"
 
-      # Rotate to change color temperature (CW/CCW)
+      # Rotate Right (CW) to increase brightness
+      - conditions:
+          - "{{ trigger.event.data.command == 'step' }}"
+          - "{{ trigger.event.data.params.step_mode == 0 }}" # Up/CW
+        sequence:
+          - service: light.turn_on
+            target: !input target_lights
+            data:
+              transition: 0
+              brightness_step_pct: "{{ brightness_step | int }}"
+
+      # Hold and Rotate Left (CCW) to decrease color temperature
       - conditions:
           - "{{ trigger.event.data.command == 'step_color_temp' }}"
+          - "{{ trigger.event.data.params.step_mode == 3 }}" # Down/CCW
         sequence:
           - service: light.turn_on
             target: !input target_lights
@@ -100,11 +126,26 @@ action:
               color_temp_kelvin: >
                 {{
                   [
-                    (state_attr(target_lights.entity_id, 'color_temp_kelvin') | int) +
-                    (trigger.event.data.params.step_size * 4.31 * (1 if trigger.event.data.params.step_mode == 0 else -1)),
-                    2700,
+                    (state_attr(target_lights.entity_id, 'color_temp_kelvin') | int) - (color_temp_step | int),
+                    2700
+                  ] | max
+                }}
+
+      # Hold and Rotate Right (CW) to increase color temperature
+      - conditions:
+          - "{{ trigger.event.data.command == 'step_color_temp' }}"
+          - "{{ trigger.event.data.params.step_mode == 0 }}" # Up/CW
+        sequence:
+          - service: light.turn_on
+            target: !input target_lights
+            data:
+              transition: 0
+              color_temp_kelvin: >
+                {{
+                  [
+                    (state_attr(target_lights.entity_id, 'color_temp_kelvin') | int) + (color_temp_step | int),
                     6500
-                  ] | sort | slice(1, 2) | first
+                  ] | min
                 }}
 
     default: []
