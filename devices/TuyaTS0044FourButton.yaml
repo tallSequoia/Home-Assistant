@@ -1,11 +1,11 @@
 # # # # # # # #
 # Tuya TS0044 4 Button Switch
 # Creation: 10 Jan 2025
-# Version: 1.2
+# Version: 1.3
 # # # # # # # #
 
 blueprint:
-  name: TS0044 4 Button Switch (v1.2)
+  name: TS0044 4 Button Switch (v1.3)
   description: Automate your Tuya 4-Button Scene Switch using ZHA events.
   domain: automation
   input:
@@ -17,77 +17,77 @@ blueprint:
           integration: zha
           model: TS0044
     button_one_short_press:
-      name: Single Press
-      description: Action to run on button 1 (lower-left) single press
+      name: Button 1 Single Press
+      description: Action to run on Button 1 (lower-left) single press
       default: []
       selector:
         action: {}
     button_one_double_press:
-      name: Double Press
-      description: Action to run on button 1 (lower-left) double press
+      name: Button 1 Double Press
+      description: Action to run on Button 1 (lower-left) double press
       default: []
       selector:
         action: {}
     button_one_long_press:
-      name: Long Press
-      description: Action to run on button 1 (lower-left) long press
+      name: Button 1 Long Press
+      description: Action to run on Button 1 (lower-left) long press
       default: []
       selector:
-         action: {} 
+        action: {}
     button_two_short_press:
-      name: Single Press
-      description: Action to run on button 2 (lower-right) single press
+      name: Button 2 Single Press
+      description: Action to run on Button 2 (lower-right) single press
       default: []
       selector:
         action: {}
     button_two_double_press:
-      name: Double Press
-      description: Action to run on button 2 (lower-right) double press
+      name: Button 2 Double Press
+      description: Action to run on Button 2 (lower-right) double press
       default: []
       selector:
         action: {}
     button_two_long_press:
-      name: Long Press
-      description: Action to run on button 2 (lower-right) long press
+      name: Button 2 Long Press
+      description: Action to run on Button 2 (lower-right) long press
       default: []
       selector:
-         action: {}  
+        action: {}
     button_three_short_press:
-      name: Single Press
-      description: Action to run on button 3 (upper-right) single press
+      name: Button 3 Single Press
+      description: Action to run on Button 3 (upper-right) single press
       default: []
       selector:
         action: {}
     button_three_double_press:
-      name: Double Press
-      description: Action to run on button 3 (upper-right) double press
+      name: Button 3 Double Press
+      description: Action to run on Button 3 (upper-right) double press
       default: []
       selector:
         action: {}
     button_three_long_press:
-      name: Long Press
-      description: Action to run on button 3 (upper-right) long press
+      name: Button 3 Long Press
+      description: Action to run on Button 3 (upper-right) long press
       default: []
       selector:
-         action: {} 
+        action: {}
     button_four_short_press:
-      name: Single Press
-      description: Action to run on button 4 (upper-left) single press
+      name: Button 4 Single Press
+      description: Action to run on Button 4 (upper-left) single press
       default: []
       selector:
         action: {}
     button_four_double_press:
-      name: Double Press
-      description: Action to run on button 4 (upper-left) double press
+      name: Button 4 Double Press
+      description: Action to run on Button 4 (upper-left) double press
       default: []
       selector:
         action: {}
     button_four_long_press:
-      name: Long Press
-      description: Action to run on button 4 (upper-left) long press
+      name: Button 4 Long Press
+      description: Action to run on Button 4 (upper-left) long press
       default: []
       selector:
-         action: {}
+        action: {}
 mode: restart
 max_exceeded: silent
 trigger:
