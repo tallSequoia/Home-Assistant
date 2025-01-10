@@ -26,12 +26,12 @@ blueprint:
     brightness_step:
       name: "Percentage to increase or decrease brightness."
       description: "The percentage to increase or decrease brightness when the knob is rotated."
+      default: 18
       selector:
         number:
           min: 1
           max: 50
           unit_of_measurement: "%"
-      default: 18
     default_brightness:
       name: "Default Brightness"
       description: "Brightness level to set when turning on the light(s)."
@@ -45,7 +45,7 @@ blueprint:
     default_color_temp:
       name: "Default Color Temperature (Kelvin)"
       description: "Default color temperature (in kelvins) for the light(s)."
-      default: 3700
+      default: 500
       selector:
         number:
           min: 2700
