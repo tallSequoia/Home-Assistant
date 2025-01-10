@@ -1,11 +1,11 @@
 # # # # # # # #
 # Tuya TS0044 4 Button Switch
 # Creation: 10 Jan 2025
-# Version: 1.1
+# Version: 1.2
 # # # # # # # #
 
 blueprint:
-  name: TS0044 4 Button Switch (v1.1)
+  name: TS0044 4 Button Switch (v1.2)
   description: Automate your Tuya 4-Button Scene Switch using ZHA events.
   domain: automation
   input:
@@ -15,7 +15,6 @@ blueprint:
       selector:
         device:
           integration: zha
-          manufacturer: _TZ3000_vp6clf9d
           model: TS0044
     button_one_short_press:
       name: Single Press
